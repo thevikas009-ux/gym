@@ -1,5 +1,5 @@
 // ============================================================
-// YUVA — Fully Synced Multi-Date App Logic
+// YUVA — Fully Synced Multi-Date App Logic (Diet + Progress + Workout)
 // ============================================================
 
 const LS = {
@@ -7,7 +7,8 @@ const LS = {
   logs: "yuva_daily_logs",
   selWeek: "yuva_sel_week",
   selDate: "yuva_workout_sel_date",
-  progressSelDate: "yuva_progress_sel_date"
+  progressSelDate: "yuva_progress_sel_date",
+  dietSelDate: "yuva_diet_sel_date"
 };
 
 const GLASS_ML = 250; 
@@ -43,6 +44,7 @@ function parseDateKey(key) {
 function getLogs() {
   return JSON.parse(localStorage.getItem(LS.logs) || "{}");
 }
+
 function saveLogs(logs) {
   localStorage.setItem(LS.logs, JSON.stringify(logs));
   refreshAllActiveViews();
@@ -77,6 +79,13 @@ function getProgressSelDate() {
 }
 function setProgressSelDate(dateStr) {
   localStorage.setItem(LS.progressSelDate, dateStr);
+}
+
+function getDietSelDate() {
+  return localStorage.getItem(LS.dietSelDate) || todayKey();
+}
+function setDietSelDate(dateStr) {
+  localStorage.setItem(LS.dietSelDate, dateStr);
 }
 
 function getStartDate() {
@@ -204,7 +213,6 @@ function computeStreak() {
     const k = todayKey(d);
     const e = logs[k];
     
-    // Check if user did any activity on this day
     const hasWeight = e && e.weight != null;
     const hasWater = e && e.water > 0;
     const hasChecks = e && e.checks && Object.values(e.checks).some(v => v === true);
@@ -214,7 +222,6 @@ function computeStreak() {
       streak++;
       d.setDate(d.getDate() - 1);
     } else {
-      // If today has no log yet, check if streak existed up to yesterday
       if (k === todayKey()) {
         d.setDate(d.getDate() - 1);
         continue;
@@ -353,7 +360,7 @@ document.getElementById("workoutDate")?.addEventListener("change", (e) => {
   renderWorkoutTab();
 });
 
-// ---------- Diet tab ----------
+// ---------- Diet tab (Multi-Date Backfill Supported) ----------
 function computeDayMacros(entry) {
   const totals = { calories: 0, protein: 0, carbs: 0, fiber: 0 };
   if (!entry || !entry.foodLog) return totals;
@@ -396,7 +403,14 @@ function foodOptionsHtml() {
 }
 
 function renderDietTab() {
-  const { entry } = getTodayLog();
+  const selDateStr = getDietSelDate();
+  
+  const dietDateElem = document.getElementById("dietLogDate");
+  if (dietDateElem) dietDateElem.value = selDateStr;
+
+  renderDietQuickDateChips(selDateStr);
+
+  const { entry } = getEntryForDate(selDateStr);
   const totals = computeDayMacros(entry);
   renderIntakeTargets(totals);
 
@@ -436,8 +450,8 @@ function renderDietTab() {
       ${optsHtml}
       <div class="meal-opt" style="color:var(--gold); margin-top:8px; font-size:11.5px;">${meal.macroNote}</div>
       <div class="log-box">
-        <div class="log-box-title">What did you actually eat?</div>
-        <div id="loggedList_${i}">${loggedHtml || `<div class="card-sub" style="margin:0 0 6px;">Nothing logged yet for this meal.</div>`}</div>
+        <div class="log-box-title">What did you eat on ${selDateStr === todayKey() ? 'Today' : selDateStr}?</div>
+        <div id="loggedList_${i}">${loggedHtml || `<div class="card-sub" style="margin:0 0 6px;">Nothing logged yet.</div>`}</div>
         <div class="log-form">
           <select id="foodSelect_${i}">${foodOptionsHtml()}</select>
           <input type="number" id="foodQty_${i}" value="1" min="0.5" step="0.5">
@@ -450,7 +464,7 @@ function renderDietTab() {
 
   list.querySelectorAll(".check").forEach(btn => {
     btn.addEventListener("click", () => {
-      const { logs, key, entry } = getTodayLog();
+      const { logs, key, entry } = getEntryForDate(getDietSelDate());
       const id = btn.dataset.id;
       entry.checks[id] = !entry.checks[id];
       logs[key] = entry;
@@ -463,12 +477,12 @@ function renderDietTab() {
       const mealIdx = btn.dataset.addMeal;
       const foodId = document.getElementById(`foodSelect_${mealIdx}`).value;
       const qty = parseFloat(document.getElementById(`foodQty_${mealIdx}`).value) || 1;
-      const { logs, key, entry } = getTodayLog();
+      const { logs, key, entry } = getEntryForDate(getDietSelDate());
       if (!entry.foodLog[mealIdx]) entry.foodLog[mealIdx] = [];
       entry.foodLog[mealIdx].push({ foodId, qty });
       logs[key] = entry;
       saveLogs(logs);
-      showToast("Food logged ✓");
+      showToast(`Food logged for ${selDateStr} ✓`);
     });
   });
 
@@ -476,7 +490,7 @@ function renderDietTab() {
     btn.addEventListener("click", () => {
       const mealIdx = btn.dataset.meal;
       const idx = parseInt(btn.dataset.idx);
-      const { logs, key, entry } = getTodayLog();
+      const { logs, key, entry } = getEntryForDate(getDietSelDate());
       entry.foodLog[mealIdx].splice(idx, 1);
       logs[key] = entry;
       saveLogs(logs);
@@ -485,6 +499,38 @@ function renderDietTab() {
 
   renderNutritionChart();
 }
+
+function renderDietQuickDateChips(selDateStr) {
+  const row = document.getElementById("dietQuickDateRow");
+  if (!row) return;
+  row.innerHTML = "";
+  
+  const today = parseDateKey(todayKey());
+  let days = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    days.push(todayKey(d));
+  }
+
+  days.forEach(k => {
+    const d = parseDateKey(k);
+    const chip = document.createElement("button");
+    chip.className = "chip" + (k === selDateStr ? " active" : "");
+    chip.textContent = (k === todayKey() ? "Today" : d.toLocaleDateString(undefined, { weekday: "short", day: "numeric" }));
+    chip.onclick = () => { 
+      setDietSelDate(k); 
+      renderDietTab(); 
+    };
+    row.appendChild(chip);
+  });
+}
+
+document.getElementById("dietLogDate")?.addEventListener("change", (e) => {
+  if (!e.target.value) return;
+  setDietSelDate(e.target.value);
+  renderDietTab();
+});
 
 function renderNutritionChart() {
   const svg = document.getElementById("nutritionChart");
