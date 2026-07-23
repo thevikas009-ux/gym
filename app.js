@@ -8,7 +8,8 @@ const LS = {
   startDate: "yuva_start_date",
   logs: "yuva_daily_logs",       // { "2026-07-19": { weight, weighTiming, water, checks:{}, foodLog:{} } }
   selWeek: "yuva_sel_week",
-  selDate: "yuva_workout_sel_date"
+  selDate: "yuva_workout_sel_date",
+  progressSelDate: "yuva_progress_sel_date"
 };
 
 const GLASS_ML = 250; // assumption for water → litre conversion
@@ -35,8 +36,7 @@ function todayKey(d = new Date()) {
   const day = String(d.getDate()).padStart(2, "0");
   return `${y}-${m}-${day}`;
 }
-// Parses a "YYYY-MM-DD" key back into a local-midnight Date (avoids the
-// UTC-parsing shift that plain `new Date("YYYY-MM-DD")` causes).
+
 function parseDateKey(key) {
   const [y, m, d] = key.split("-").map(Number);
   return new Date(y, m - 1, d);
@@ -62,16 +62,18 @@ function getEntryForDate(dateStr) {
 function getTodayLog() {
   return getEntryForDate(todayKey());
 }
-function getLogFor(dateObj) {
-  const logs = getLogs();
-  const k = todayKey(dateObj);
-  return logs[k] || null;
-}
 function getWorkoutSelDate() {
   return localStorage.getItem(LS.selDate) || todayKey();
 }
 function setWorkoutSelDate(dateStr) {
   localStorage.setItem(LS.selDate, dateStr);
+}
+
+function getProgressSelDate() {
+  return localStorage.getItem(LS.progressSelDate) || todayKey();
+}
+function setProgressSelDate(dateStr) {
+  localStorage.setItem(LS.progressSelDate, dateStr);
 }
 
 function getStartDate() {
@@ -104,6 +106,7 @@ function todaySplitType() {
 
 function showToast(msg) {
   const t = document.getElementById("toast");
+  if (!t) return;
   t.textContent = msg;
   t.classList.add("show");
   setTimeout(() => t.classList.remove("show"), 1600);
@@ -199,16 +202,11 @@ document.getElementById("startDate").addEventListener("change", (e) => {
 });
 
 // ---------- Workout tab ----------
-// The day/split is always auto-derived from whichever DATE is selected
-// (defaults to today). Use the date picker or quick-date chips to jump to
-// any past day — e.g. to backfill workouts you did but didn't tick off —
-// and tick/untick exercises for that exact date. The Week chips below are
-// a separate, purely optional "preview other weeks' exercise variations"
-// tool and only affect what's shown, not what's saved, unless the
-// previewed week happens to match the selected date's real program week.
 function renderWorkoutTab() {
   const selDateStr = getWorkoutSelDate();
-  document.getElementById("workoutDate").value = selDateStr;
+  const workoutDateElem = document.getElementById("workoutDate");
+  if (workoutDateElem) workoutDateElem.value = selDateStr;
+  
   renderQuickDateChips(selDateStr);
 
   const selDate = parseDateKey(selDateStr);
@@ -221,22 +219,31 @@ function renderWorkoutTab() {
   const dayName = selDate.toLocaleDateString(undefined, { weekday: "long" });
   const dateLabel = selDate.toLocaleDateString(undefined, { day: "2-digit", month: "short" });
   const splitLabel = split === "rest" ? "REST DAY" : split === "full" ? "FULL BODY DAY" : split.toUpperCase() + " DAY";
-  document.getElementById("todaySplitBig").textContent =
-    `${isToday ? "TODAY" : dayName.toUpperCase()} ${dateLabel} · ${splitLabel}`;
-  document.getElementById("dayFocusNote").textContent =
-    (isPreview ? `Previewing Week ${previewWeek} exercises (won't be saved unless it matches ${dateLabel}'s actual Week ${currentWeek}). ` : "") + SPLIT_FOCUS[split];
+  
+  const todaySplitElem = document.getElementById("todaySplitBig");
+  if (todaySplitElem) {
+    todaySplitElem.textContent = `${isToday ? "TODAY" : dayName.toUpperCase()} ${dateLabel} · ${splitLabel}`;
+  }
+  
+  const dayFocusElem = document.getElementById("dayFocusNote");
+  if (dayFocusElem) {
+    dayFocusElem.textContent = (isPreview ? `Previewing Week ${previewWeek} exercises (won't be saved unless it matches ${dateLabel}'s actual Week ${currentWeek}). ` : "") + SPLIT_FOCUS[split];
+  }
 
   const weekRow = document.getElementById("weekSelectRow");
-  weekRow.innerHTML = "";
-  [1, 2, 3, 4].forEach(w => {
-    const chip = document.createElement("button");
-    chip.className = "chip" + (w === previewWeek ? " active" : "");
-    chip.textContent = "Week " + w + (w === currentWeek ? " (matches this date)" : "");
-    chip.onclick = () => { localStorage.setItem(LS.selWeek, w); renderWorkoutTab(); };
-    weekRow.appendChild(chip);
-  });
+  if (weekRow) {
+    weekRow.innerHTML = "";
+    [1, 2, 3, 4].forEach(w => {
+      const chip = document.createElement("button");
+      chip.className = "chip" + (w === previewWeek ? " active" : "");
+      chip.textContent = "Week " + w + (w === currentWeek ? " (matches this date)" : "");
+      chip.onclick = () => { localStorage.setItem(LS.selWeek, w); renderWorkoutTab(); };
+      weekRow.appendChild(chip);
+    });
+  }
 
   const list = document.getElementById("exerciseList");
+  if (!list) return;
   list.innerHTML = "";
 
   if (split === "rest") {
@@ -295,22 +302,30 @@ function renderQuickDateChips(selDateStr) {
   for (let d = new Date(start); d <= today; d.setDate(d.getDate() + 1)) {
     days.push(todayKey(d));
   }
-  if (days.length > 14) days = days.slice(-14); // keep the chip row from overflowing
+  if (days.length > 14) days = days.slice(-14);
   days.forEach(k => {
     const d = parseDateKey(k);
     const chip = document.createElement("button");
     chip.className = "chip" + (k === selDateStr ? " active" : "");
     chip.textContent = (k === todayKey() ? "Today" : d.toLocaleDateString(undefined, { weekday: "short", day: "numeric" }));
-    chip.onclick = () => { setWorkoutSelDate(k); renderWorkoutTab(); };
+    chip.onclick = () => { 
+      setWorkoutSelDate(k); 
+      localStorage.setItem(LS.selWeek, weekNumberForDate(parseDateKey(k)));
+      renderWorkoutTab(); 
+    };
     row.appendChild(chip);
   });
 }
 
-document.getElementById("workoutDate").addEventListener("change", (e) => {
-  if (!e.target.value) return;
-  setWorkoutSelDate(e.target.value);
-  renderWorkoutTab();
-});
+const workoutDateElem = document.getElementById("workoutDate");
+if (workoutDateElem) {
+  workoutDateElem.addEventListener("change", (e) => {
+    if (!e.target.value) return;
+    setWorkoutSelDate(e.target.value);
+    localStorage.setItem(LS.selWeek, weekNumberForDate(parseDateKey(e.target.value)));
+    renderWorkoutTab();
+  });
+}
 
 // ---------- Diet tab ----------
 function computeDayMacros(entry) {
@@ -331,6 +346,7 @@ function computeDayMacros(entry) {
 
 function renderIntakeTargets(totals) {
   const box = document.getElementById("intakeTargets");
+  if (!box) return;
   const rows = [
     { key: "calories", label: "Calories", unit: "kcal", target: DAILY_TARGET.calories },
     { key: "protein", label: "Protein", unit: "g", target: DAILY_TARGET.protein },
@@ -359,6 +375,7 @@ function renderDietTab() {
   renderIntakeTargets(totals);
 
   const list = document.getElementById("mealList");
+  if (!list) return;
   list.innerHTML = "";
   DIET_DATA.forEach((meal, i) => {
     const checkId = `meal_${i}`;
@@ -484,55 +501,84 @@ function renderNutritionChart() {
   svg.innerHTML = bars;
 }
 
-// ---------- Progress tab ----------
+// ---------- Progress tab (Weight & Water) ----------
 function renderProgressTab() {
-  const { entry } = getTodayLog();
-  document.getElementById("inputWeight").value = entry.weight || "";
-  document.getElementById("waterCount").textContent = `${entry.water || 0} / 8`;
-  document.getElementById("waterLiters").textContent = (((entry.water || 0) * GLASS_ML) / 1000).toFixed(2) + " L";
+  const selDateStr = getProgressSelDate();
+  
+  // Dynamic Date Input Binding (if exists in HTML)
+  const progDateElem = document.getElementById("progressLogDate");
+  if (progDateElem) {
+    progDateElem.value = selDateStr;
+  }
+
+  const { entry } = getEntryForDate(selDateStr);
+  
+  const weightInput = document.getElementById("inputWeight");
+  if (weightInput) weightInput.value = entry.weight || "";
+  
+  const waterCount = document.getElementById("waterCount");
+  if (waterCount) waterCount.textContent = `${entry.water || 0} / 8`;
+  
+  const waterLiters = document.getElementById("waterLiters");
+  if (waterLiters) waterLiters.textContent = (((entry.water || 0) * GLASS_ML) / 1000).toFixed(2) + " L";
 
   const timingRow = document.getElementById("weighTimingRow");
-  timingRow.innerHTML = "";
-  [["before", "Before Workout"], ["after", "After Workout"]].forEach(([val, label]) => {
-    const chip = document.createElement("button");
-    chip.className = "chip" + (entry.weighTiming === val ? " active" : "");
-    chip.textContent = label;
-    chip.onclick = () => {
-      const { logs, key, entry } = getTodayLog();
-      entry.weighTiming = val;
-      logs[key] = entry;
-      saveLogs(logs);
-      renderProgressTab();
-    };
-    timingRow.appendChild(chip);
-  });
+  if (timingRow) {
+    timingRow.innerHTML = "";
+    [["before", "Before Workout"], ["after", "After Workout"]].forEach(([val, label]) => {
+      const chip = document.createElement("button");
+      chip.className = "chip" + (entry.weighTiming === val ? " active" : "");
+      chip.textContent = label;
+      chip.onclick = () => {
+        const { logs, key, entry } = getEntryForDate(getProgressSelDate());
+        entry.weighTiming = val;
+        logs[key] = entry;
+        saveLogs(logs);
+        renderProgressTab();
+      };
+      timingRow.appendChild(chip);
+    });
+  }
 
   renderHistory();
   renderChart();
 }
 
-document.getElementById("waterPlus").addEventListener("click", () => {
-  const { logs, key, entry } = getTodayLog();
+const progDateElem = document.getElementById("progressLogDate");
+if (progDateElem) {
+  progDateElem.addEventListener("change", (e) => {
+    if (!e.target.value) return;
+    setProgressSelDate(e.target.value);
+    renderProgressTab();
+  });
+}
+
+document.getElementById("waterPlus")?.addEventListener("click", () => {
+  const { logs, key, entry } = getEntryForDate(getProgressSelDate());
   entry.water = Math.min(20, (entry.water || 0) + 1);
-  logs[key] = entry; saveLogs(logs);
-  document.getElementById("waterCount").textContent = `${entry.water} / 8`;
-  document.getElementById("waterLiters").textContent = ((entry.water * GLASS_ML) / 1000).toFixed(2) + " L";
-});
-document.getElementById("waterMinus").addEventListener("click", () => {
-  const { logs, key, entry } = getTodayLog();
-  entry.water = Math.max(0, (entry.water || 0) - 1);
-  logs[key] = entry; saveLogs(logs);
+  logs[key] = entry; 
+  saveLogs(logs);
   document.getElementById("waterCount").textContent = `${entry.water} / 8`;
   document.getElementById("waterLiters").textContent = ((entry.water * GLASS_ML) / 1000).toFixed(2) + " L";
 });
 
-document.getElementById("saveProgress").addEventListener("click", () => {
-  const { logs, key, entry } = getTodayLog();
+document.getElementById("waterMinus")?.addEventListener("click", () => {
+  const { logs, key, entry } = getEntryForDate(getProgressSelDate());
+  entry.water = Math.max(0, (entry.water || 0) - 1);
+  logs[key] = entry; 
+  saveLogs(logs);
+  document.getElementById("waterCount").textContent = `${entry.water} / 8`;
+  document.getElementById("waterLiters").textContent = ((entry.water * GLASS_ML) / 1000).toFixed(2) + " L";
+});
+
+document.getElementById("saveProgress")?.addEventListener("click", () => {
+  const targetDate = getProgressSelDate();
+  const { logs, key, entry } = getEntryForDate(targetDate);
   const w = parseFloat(document.getElementById("inputWeight").value);
   if (w) entry.weight = w;
   logs[key] = entry;
   saveLogs(logs);
-  showToast("Saved today's log ✓");
+  showToast(`Saved log for ${targetDate} ✓`);
   renderHistory();
   renderChart();
   renderTodayTab();
@@ -542,7 +588,8 @@ function renderHistory() {
   const logs = getLogs();
   const keys = Object.keys(logs).sort().reverse().slice(0, 14);
   const box = document.getElementById("historyTable");
-  if (!keys.length) { box.innerHTML = `<div class="empty">No entries yet. Log today above.</div>`; return; }
+  if (!box) return;
+  if (!keys.length) { box.innerHTML = `<div class="empty">No entries yet. Log above.</div>`; return; }
   let html = `<table><tr><th>Date</th><th>Weight</th><th>When</th><th>Water</th></tr>`;
   keys.forEach(k => {
     const e = logs[k];
@@ -557,6 +604,7 @@ function renderChart() {
   const logs = getLogs();
   const keys = Object.keys(logs).filter(k => logs[k].weight).sort();
   const svg = document.getElementById("weightChart");
+  if (!svg) return;
   svg.innerHTML = "";
   if (keys.length < 2) {
     svg.innerHTML = `<text x="250" y="80" fill="#6b7280" font-size="13" text-anchor="middle">Log weight on 2+ days to see your trend</text>`;
@@ -594,6 +642,7 @@ function renderInsightsTab() {
 function renderLeanStats(logs) {
   const weightKeys = Object.keys(logs).filter(k => logs[k].weight).sort();
   const box = document.getElementById("leanStats");
+  if (!box) return;
   if (!weightKeys.length) {
     box.innerHTML = `<div class="empty" style="grid-column:1/-1;">Log your weight in Progress to start tracking trend.</div>`;
     return;
@@ -648,7 +697,9 @@ function renderAdherence(logs) {
   const mealPct = expectedMeals ? Math.round((actualMeals / expectedMeals) * 100) : 0;
   const avgProtein = proteinDays ? Math.round(proteinTotal / proteinDays) : 0;
 
-  document.getElementById("adherenceBars").innerHTML = `
+  const barElem = document.getElementById("adherenceBars");
+  if (!barElem) return;
+  barElem.innerHTML = `
     <div class="target-row">
       <div class="tr-head"><span>Workout completion</span><b>${actualEx}/${expectedEx} · ${exPct}%</b></div>
       <div class="bar-track"><div class="bar-fill" style="width:${exPct}%;"></div></div>
@@ -702,10 +753,12 @@ function renderYesterdayAlerts(logs) {
     alerts.push({ type: "warn", text: `No food logged yesterday — can't verify protein intake.` });
   }
 
-  if (!alerts.length) {
-    box.innerHTML = `<div class="alert ok">✅ Yesterday was fully on track — workout done, meals logged, protein hit.</div>`;
-  } else {
-    box.innerHTML = alerts.map(a => `<div class="alert warn">⚠️ ${a.text}</div>`).join("");
+  if (box) {
+    if (!alerts.length) {
+      box.innerHTML = `<div class="alert ok">✅ Yesterday was fully on track — workout done, meals logged, protein hit.</div>`;
+    } else {
+      box.innerHTML = alerts.map(a => `<div class="alert warn">⚠️ ${a.text}</div>`).join("");
+    }
   }
 
   return { proteinShortfall, workoutMissed, workoutInfo };
@@ -713,6 +766,7 @@ function renderYesterdayAlerts(logs) {
 
 function renderAdjustedTargets(review) {
   const box = document.getElementById("adjustedTargets");
+  if (!box) return;
   const bumps = [];
 
   const proteinBump = Math.min(25, Math.round((review.proteinShortfall || 0) * 0.5));
