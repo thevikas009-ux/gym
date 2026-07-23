@@ -1,5 +1,5 @@
 // ============================================================
-// YUVA — Fully Synced Multi-Date App Logic
+// YUVA — Fully Synced Multi-Date App Logic (Error-Safe Version)
 // ============================================================
 
 const LS = {
@@ -37,12 +37,17 @@ function todayKey(d = new Date()) {
 }
 
 function parseDateKey(key) {
+  if (!key) return new Date();
   const [y, m, d] = key.split("-").map(Number);
   return new Date(y, m - 1, d);
 }
 
 function getLogs() {
-  return JSON.parse(localStorage.getItem(LS.logs) || "{}");
+  try {
+    return JSON.parse(localStorage.getItem(LS.logs) || "{}");
+  } catch (e) {
+    return {};
+  }
 }
 
 function saveLogs(logs) {
@@ -112,7 +117,7 @@ function currentWeekNumber() {
 function splitTypeForDate(d) {
   const dow = d.getDay(); 
   const idx = dow === 0 ? 6 : dow - 1; 
-  return SPLIT_CYCLE[WEEKDAY_KEYS[idx]];
+  return (typeof SPLIT_CYCLE !== "undefined" && SPLIT_CYCLE[WEEKDAY_KEYS[idx]]) || "full";
 }
 
 function todaySplitType() {
@@ -136,6 +141,7 @@ function refreshAllActiveViews() {
 }
 
 function foodOptionsHtml() {
+  if (typeof FOOD_DB === "undefined") return "";
   const groups = {};
   FOOD_DB.forEach(f => {
     const gName = f.group || "Other Items";
@@ -157,14 +163,17 @@ function foodOptionsHtml() {
 // ---------- Navigation ----------
 function switchView(name) {
   document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
-  document.getElementById("view-" + name).classList.add("active");
+  const viewElem = document.getElementById("view-" + name);
+  if (viewElem) viewElem.classList.add("active");
   document.querySelectorAll(".nav-btn").forEach(b => b.classList.toggle("active", b.dataset.view === name));
+  
   if (name === "workout") renderWorkoutTab();
   if (name === "diet") renderDietTab();
   if (name === "progress") renderProgressTab();
   if (name === "today") renderTodayTab();
   if (name === "insights") renderInsightsTab();
 }
+
 document.querySelectorAll(".nav-btn").forEach(b => {
   b.addEventListener("click", () => switchView(b.dataset.view));
 });
@@ -180,47 +189,61 @@ function parseTime(t) {
 
 function renderTodayTab() {
   const now = new Date();
-  document.getElementById("headerDate").textContent =
-    now.toLocaleDateString(undefined, { weekday: "short", day: "2-digit", month: "short" });
+  const headerElem = document.getElementById("headerDate");
+  if (headerElem) {
+    headerElem.textContent = now.toLocaleDateString(undefined, { weekday: "short", day: "2-digit", month: "short" });
+  }
 
   const week = currentWeekNumber();
   const split = todaySplitType();
   const splitLabel = split === "rest" ? "Rest Day" : split === "full" ? "Full Body Day" : split[0].toUpperCase() + split.slice(1) + " Day";
-  document.getElementById("dashSub").textContent = `Week ${week} · ${splitLabel}`;
+  
+  const dashSub = document.getElementById("dashSub");
+  if (dashSub) dashSub.textContent = `Week ${week} · ${splitLabel}`;
 
-  document.getElementById("startDate").value = getStartDate();
+  const startElem = document.getElementById("startDate");
+  if (startElem) startElem.value = getStartDate();
 
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
   const tl = document.getElementById("timeline");
-  tl.innerHTML = "";
-  SCHEDULE.forEach((item) => {
-    const [h, m] = parseTime(item.time);
-    const itemMinutes = h * 60 + m;
-    const isPast = nowMinutes > itemMinutes + 20;
-    const isActive = Math.abs(nowMinutes - itemMinutes) <= 20;
-    const div = document.createElement("div");
-    div.className = "tl-item" + (isActive ? " active" : "") + (isPast ? " done" : "");
-    div.innerHTML = `
-      <div class="tl-dot"></div>
-      <div class="tl-time">${item.time}</div>
-      <div class="tl-label">${item.label}</div>
-    `;
-    tl.appendChild(div);
-  });
+  if (tl) {
+    tl.innerHTML = "";
+    SCHEDULE.forEach((item) => {
+      const [h, m] = parseTime(item.time);
+      const itemMinutes = h * 60 + m;
+      const isPast = nowMinutes > itemMinutes + 20;
+      const isActive = Math.abs(nowMinutes - itemMinutes) <= 20;
+      const div = document.createElement("div");
+      div.className = "tl-item" + (isActive ? " active" : "") + (isPast ? " done" : "");
+      div.innerHTML = `
+        <div class="tl-dot"></div>
+        <div class="tl-time">${item.time}</div>
+        <div class="tl-label">${item.label}</div>
+      `;
+      tl.appendChild(div);
+    });
+  }
 
   const { entry } = getTodayLog();
-  document.getElementById("statWeight").textContent = entry.weight ? entry.weight : "--";
-  document.getElementById("statWater").textContent = `${entry.water || 0}/8`;
-  document.getElementById("statStreak").textContent = computeStreak();
+  const wElem = document.getElementById("statWeight");
+  if (wElem) wElem.textContent = entry.weight ? entry.weight : "--";
+  
+  const watElem = document.getElementById("statWater");
+  if (watElem) watElem.textContent = `${entry.water || 0}/8`;
+
+  const strkElem = document.getElementById("statStreak");
+  if (strkElem) strkElem.textContent = computeStreak();
 
   const row = document.getElementById("weekBadgeRow");
-  row.innerHTML = "";
-  [1, 2, 3, 4].forEach(w => {
-    const chip = document.createElement("div");
-    chip.className = "chip" + (w === week ? " active" : "");
-    chip.textContent = "Week " + w;
-    row.appendChild(chip);
-  });
+  if (row) {
+    row.innerHTML = "";
+    [1, 2, 3, 4].forEach(w => {
+      const chip = document.createElement("div");
+      chip.className = "chip" + (w === week ? " active" : "");
+      chip.textContent = "Week " + w;
+      row.appendChild(chip);
+    });
+  }
 }
 
 function computeStreak() {
@@ -281,8 +304,8 @@ function renderWorkoutTab() {
   }
   
   const dayFocusElem = document.getElementById("dayFocusNote");
-  if (dayFocusElem) {
-    dayFocusElem.textContent = (isPreview ? `Previewing Week ${previewWeek} exercises. ` : "") + SPLIT_FOCUS[split];
+  if (dayFocusElem && typeof SPLIT_FOCUS !== "undefined") {
+    dayFocusElem.textContent = (isPreview ? `Previewing Week ${previewWeek} exercises. ` : "") + (SPLIT_FOCUS[split] || "");
   }
 
   const weekRow = document.getElementById("weekSelectRow");
@@ -306,12 +329,14 @@ function renderWorkoutTab() {
     return;
   }
 
+  if (typeof WORKOUT_DATA === "undefined" || !WORKOUT_DATA[previewWeek] || !WORKOUT_DATA[previewWeek][split]) return;
+
   const exercises = WORKOUT_DATA[previewWeek][split];
   const { entry } = getEntryForDate(selDateStr);
 
   exercises.forEach((ex, i) => {
     const checkId = `w${previewWeek}_${split}_${i}`;
-    const isChecked = !!entry.checks[checkId];
+    const isChecked = !!(entry.checks && entry.checks[checkId]);
     const card = document.createElement("div");
     card.className = "ex-card";
     card.innerHTML = `
@@ -385,12 +410,14 @@ function computeDayMacros(entry) {
   if (!entry || !entry.foodLog) return totals;
   Object.values(entry.foodLog).forEach(items => {
     (items || []).forEach(it => {
-      const f = findFood(it.foodId);
-      if (!f) return;
-      totals.calories += f.cal * it.qty;
-      totals.protein += f.protein * it.qty;
-      totals.carbs += f.carbs * it.qty;
-      totals.fiber += f.fiber * it.qty;
+      if (typeof findFood === "function") {
+        const f = findFood(it.foodId);
+        if (!f) return;
+        totals.calories += (f.cal || 0) * (it.qty || 1);
+        totals.protein += (f.protein || 0) * (it.qty || 1);
+        totals.carbs += (f.carbs || 0) * (it.qty || 1);
+        totals.fiber += (f.fiber || 0) * (it.qty || 1);
+      }
     });
   });
   return totals;
@@ -398,7 +425,7 @@ function computeDayMacros(entry) {
 
 function renderIntakeTargets(totals) {
   const box = document.getElementById("intakeTargets");
-  if (!box) return;
+  if (!box || typeof DAILY_TARGET === "undefined") return;
   const rows = [
     { key: "calories", label: "Calories", unit: "kcal", target: DAILY_TARGET.calories },
     { key: "protein", label: "Protein", unit: "g", target: DAILY_TARGET.protein },
@@ -430,23 +457,25 @@ function renderDietTab() {
   renderIntakeTargets(totals);
 
   const list = document.getElementById("mealList");
-  if (!list) return;
+  if (!list || typeof DIET_DATA === "undefined") return;
   list.innerHTML = "";
+
   DIET_DATA.forEach((meal, i) => {
     const checkId = `meal_${i}`;
-    const isChecked = !!entry.checks[checkId];
+    const isChecked = !!(entry.checks && entry.checks[checkId]);
     const optsHtml = meal.options.map(o =>
       `<div class="meal-opt"><span class="tag ${o.tag}">${o.tag === "veg" ? "Veg" : "Non-Veg"}</span>${o.text}</div>`
     ).join("");
 
-    const loggedItems = entry.foodLog[i] || [];
+    const loggedItems = (entry.foodLog && entry.foodLog[i]) || [];
     const loggedHtml = loggedItems.map((it, idx) => {
+      if (typeof findFood !== "function") return "";
       const f = findFood(it.foodId);
       if (!f) return "";
       return `
         <div class="logged-item">
           <span>${f.name} × ${it.qty}</span>
-          <span class="macros">${Math.round(f.cal * it.qty)}kcal · ${Math.round(f.protein * it.qty * 10) / 10}g P
+          <span class="macros">${Math.round((f.cal || 0) * it.qty)}kcal · ${Math.round((f.protein || 0) * it.qty * 10) / 10}g P
             <button class="remove-x" data-meal="${i}" data-idx="${idx}">✕</button>
           </span>
         </div>`;
@@ -512,9 +541,11 @@ function renderDietTab() {
       const mealIdx = btn.dataset.meal;
       const idx = parseInt(btn.dataset.idx);
       const { logs, key, entry } = getEntryForDate(getDietSelDate());
-      entry.foodLog[mealIdx].splice(idx, 1);
-      logs[key] = entry;
-      saveLogs(logs);
+      if (entry.foodLog && entry.foodLog[mealIdx]) {
+        entry.foodLog[mealIdx].splice(idx, 1);
+        logs[key] = entry;
+        saveLogs(logs);
+      }
     });
   });
 
@@ -555,7 +586,7 @@ document.getElementById("dietLogDate")?.addEventListener("change", (e) => {
 
 function renderNutritionChart() {
   const svg = document.getElementById("nutritionChart");
-  if (!svg) return;
+  if (!svg || typeof DAILY_TARGET === "undefined") return;
   const logs = getLogs();
   const days = [];
   for (let i = 6; i >= 0; i--) {
@@ -782,10 +813,12 @@ function renderAdherence(logs) {
     const split = splitTypeForDate(d);
     const week = weekNumberForDate(d);
     if (split !== "rest") {
-      const list = WORKOUT_DATA[week][split] || [];
-      expectedEx += list.length;
-      if (e) {
-        list.forEach((ex, i) => { if (e.checks && e.checks[`w${week}_${split}_${i}`]) actualEx++; });
+      if (typeof WORKOUT_DATA !== "undefined" && WORKOUT_DATA[week] && WORKOUT_DATA[week][split]) {
+        const list = WORKOUT_DATA[week][split] || [];
+        expectedEx += list.length;
+        if (e) {
+          list.forEach((ex, i) => { if (e.checks && e.checks[`w${week}_${split}_${i}`]) actualEx++; });
+        }
       }
     }
     expectedMeals += 6;
@@ -812,8 +845,8 @@ function renderAdherence(logs) {
       <div class="bar-track"><div class="bar-fill" style="width:${mealPct}%;"></div></div>
     </div>
     <div class="target-row">
-      <div class="tr-head"><span>Avg daily protein</span><b>${avgProtein}g / ${DAILY_TARGET.protein}g</b></div>
-      <div class="bar-track"><div class="bar-fill" style="width:${Math.min(100, Math.round((avgProtein / DAILY_TARGET.protein) * 100))}%;"></div></div>
+      <div class="tr-head"><span>Avg daily protein</span><b>${avgProtein}g / ${(typeof DAILY_TARGET !== "undefined" && DAILY_TARGET.protein) || 155}g</b></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.min(100, Math.round((avgProtein / ((typeof DAILY_TARGET !== "undefined" && DAILY_TARGET.protein) || 155)) * 100))}%;"></div></div>
     </div>
   `;
 }
@@ -831,14 +864,18 @@ function renderYesterdayAlerts(logs) {
   let workoutMissed = false;
   let workoutInfo = null;
 
+  const dailyProteinTarget = (typeof DAILY_TARGET !== "undefined" && DAILY_TARGET.protein) || 155;
+
   if (split !== "rest") {
-    const list = WORKOUT_DATA[week][split] || [];
-    let done = 0;
-    if (e) list.forEach((ex, i) => { if (e.checks && e.checks[`w${week}_${split}_${i}`]) done++; });
-    if (done < list.length) {
-      workoutMissed = true;
-      workoutInfo = { split, done, total: list.length };
-      alerts.push({ type: "warn", text: `Only ${done}/${list.length} ${split} exercises marked done yesterday.` });
+    if (typeof WORKOUT_DATA !== "undefined" && WORKOUT_DATA[week] && WORKOUT_DATA[week][split]) {
+      const list = WORKOUT_DATA[week][split] || [];
+      let done = 0;
+      if (e) list.forEach((ex, i) => { if (e.checks && e.checks[`w${week}_${split}_${i}`]) done++; });
+      if (done < list.length) {
+        workoutMissed = true;
+        workoutInfo = { split, done, total: list.length };
+        alerts.push({ type: "warn", text: `Only ${done}/${list.length} ${split} exercises marked done yesterday.` });
+      }
     }
   }
 
@@ -849,9 +886,9 @@ function renderYesterdayAlerts(logs) {
   }
 
   const macros = e ? computeDayMacros(e) : { protein: 0 };
-  if (macros.protein > 0 && macros.protein < DAILY_TARGET.protein - 10) {
-    proteinShortfall = Math.round(DAILY_TARGET.protein - macros.protein);
-    alerts.push({ type: "warn", text: `Protein was ${proteinShortfall}g short yesterday (${Math.round(macros.protein)}g vs ${DAILY_TARGET.protein}g target).` });
+  if (macros.protein > 0 && macros.protein < dailyProteinTarget - 10) {
+    proteinShortfall = Math.round(dailyProteinTarget - macros.protein);
+    alerts.push({ type: "warn", text: `Protein was ${proteinShortfall}g short yesterday (${Math.round(macros.protein)}g vs ${dailyProteinTarget}g target).` });
   } else if (macros.protein === 0) {
     alerts.push({ type: "warn", text: `No food logged yesterday — can't verify protein intake.` });
   }
@@ -871,13 +908,14 @@ function renderAdjustedTargets(review) {
   const box = document.getElementById("adjustedTargets");
   if (!box) return;
   const bumps = [];
+  const baseProtein = (typeof DAILY_TARGET !== "undefined" && DAILY_TARGET.protein) || 155;
 
   const proteinBump = Math.min(25, Math.round((review.proteinShortfall || 0) * 0.5));
-  const adjustedProtein = DAILY_TARGET.protein + proteinBump;
+  const adjustedProtein = baseProtein + proteinBump;
   if (proteinBump > 0) {
     bumps.push(`<div class="alert tip">🎯 Protein target today: <b>${adjustedProtein}g</b> (${proteinBump}g catch-up).</div>`);
   } else {
-    bumps.push(`<div class="alert tip">🎯 Protein target today: <b>${DAILY_TARGET.protein}g</b> — on track.</div>`);
+    bumps.push(`<div class="alert tip">🎯 Protein target today: <b>${baseProtein}g</b> — on track.</div>`);
   }
 
   if (review.workoutMissed && review.workoutInfo) {
