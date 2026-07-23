@@ -1,789 +1,377 @@
-// ============================================================
-// YUVA — app logic
-// All data persists locally on this device via localStorage.
-// Nothing is sent anywhere; this is a fully offline personal tracker.
-// ============================================================
-
-const LS = {
-  startDate: "yuva_start_date",
-  logs: "yuva_daily_logs",       // { "2026-07-19": { weight, weighTiming, water, checks:{}, foodLog:{} } }
-  selWeek: "yuva_sel_week",
-  selDate: "yuva_workout_sel_date",
-  progressSelDate: "yuva_progress_sel_date"
-};
-
-const GLASS_ML = 250; // assumption for water → litre conversion
-
-const SCHEDULE = [
-  { time: "06:00 AM", label: "Wake up" },
-  { time: "06:32 AM", label: "Catch train for gym" },
-  { time: "07:00 AM", label: "Gym workout begins" },
-  { time: "08:30 AM", label: "Shower & get ready" },
-  { time: "08:45 AM", label: "Post-workout breakfast" },
-  { time: "09:00 AM", label: "Office hours begin" },
-  { time: "01:00 PM", label: "High-protein lunch" },
-  { time: "04:30 PM", label: "Evening snack" },
-  { time: "06:00 PM", label: "Office hours end" },
-  { time: "07:15 PM", label: "Reach home (7:15–7:30 PM)" },
-  { time: "08:00 PM", label: "Dinner window (7:30–9:30 PM)" }
-];
-
-const WEEKDAY_KEYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
-
-function todayKey(d = new Date()) {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
-
-function parseDateKey(key) {
-  const [y, m, d] = key.split("-").map(Number);
-  return new Date(y, m - 1, d);
-}
-
-function getLogs() {
-  return JSON.parse(localStorage.getItem(LS.logs) || "{}");
-}
-function saveLogs(logs) {
-  localStorage.setItem(LS.logs, JSON.stringify(logs));
-}
-function ensureEntry(logs, key) {
-  if (!logs[key]) logs[key] = { weight: null, weighTiming: null, water: 0, checks: {}, foodLog: {} };
-  if (!logs[key].checks) logs[key].checks = {};
-  if (!logs[key].foodLog) logs[key].foodLog = {};
-  return logs[key];
-}
-function getEntryForDate(dateStr) {
-  const logs = getLogs();
-  const entry = ensureEntry(logs, dateStr);
-  return { logs, key: dateStr, entry };
-}
-function getTodayLog() {
-  return getEntryForDate(todayKey());
-}
-function getWorkoutSelDate() {
-  return localStorage.getItem(LS.selDate) || todayKey();
-}
-function setWorkoutSelDate(dateStr) {
-  localStorage.setItem(LS.selDate, dateStr);
-}
-
-function getProgressSelDate() {
-  return localStorage.getItem(LS.progressSelDate) || todayKey();
-}
-function setProgressSelDate(dateStr) {
-  localStorage.setItem(LS.progressSelDate, dateStr);
-}
-
-function getStartDate() {
-  let s = localStorage.getItem(LS.startDate);
-  if (!s) {
-    s = todayKey();
-    localStorage.setItem(LS.startDate, s);
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>YUVA — Daily Recomp Tracker</title>
+<link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiWVVWQSIsInNob3J0X25hbWUiOiJZVVZBIiwic3RhcnRfdXJsIjoiLiIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiMxMTE0MWEiLCJ0aGVtZV9jb2xvciI6IiMxMTE0MWEifQ==">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#11141a;
+    --ink-2:#181c24;
+    --surface:#1f2430;
+    --surface-2:#262c3a;
+    --line: #333a49;
+    --gold:#e8a93b;
+    --gold-dim:#b98a2f;
+    --coral:#ff7a59;
+    --mint:#5fd6a8;
+    --red:#ff6b6b;
+    --text:#eef0f2;
+    --text-dim:#9aa1b0;
+    --text-faint:#6b7280;
+    --radius: 14px;
+    --font-display: 'Archivo Black', 'Inter', sans-serif;
+    --font-body: 'Inter', sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
   }
-  return s;
-}
-
-function weekNumberForDate(d) {
-  const start = parseDateKey(getStartDate());
-  const target = parseDateKey(todayKey(d));
-  const diffDays = Math.floor((target - start) / 86400000);
-  const weekIdx = Math.floor(diffDays / 7) % 4;
-  return weekIdx < 0 ? ((weekIdx % 4) + 4) % 4 + 1 : weekIdx + 1;
-}
-function currentWeekNumber() {
-  return weekNumberForDate(new Date());
-}
-function splitTypeForDate(d) {
-  const dow = d.getDay(); // 0 = Sun
-  const idx = dow === 0 ? 6 : dow - 1; // Mon=0 ... Sun=6
-  return SPLIT_CYCLE[WEEKDAY_KEYS[idx]];
-}
-function todaySplitType() {
-  return splitTypeForDate(new Date());
-}
-
-function showToast(msg) {
-  const t = document.getElementById("toast");
-  if (!t) return;
-  t.textContent = msg;
-  t.classList.add("show");
-  setTimeout(() => t.classList.remove("show"), 1600);
-}
-
-// ---------- Navigation ----------
-function switchView(name) {
-  document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
-  document.getElementById("view-" + name).classList.add("active");
-  document.querySelectorAll(".nav-btn").forEach(b => b.classList.toggle("active", b.dataset.view === name));
-  if (name === "workout") renderWorkoutTab();
-  if (name === "diet") renderDietTab();
-  if (name === "progress") renderProgressTab();
-  if (name === "today") renderTodayTab();
-  if (name === "insights") renderInsightsTab();
-}
-document.querySelectorAll(".nav-btn").forEach(b => {
-  b.addEventListener("click", () => switchView(b.dataset.view));
-});
-
-// ---------- Today tab ----------
-function parseTime(t) {
-  const [time, ampm] = t.split(" ");
-  let [h, m] = time.split(":").map(Number);
-  if (ampm === "PM" && h !== 12) h += 12;
-  if (ampm === "AM" && h === 12) h = 0;
-  return [h, m, ampm];
-}
-
-function renderTodayTab() {
-  const now = new Date();
-  document.getElementById("headerDate").textContent =
-    now.toLocaleDateString(undefined, { weekday: "short", day: "2-digit", month: "short" });
-
-  const week = currentWeekNumber();
-  const split = todaySplitType();
-  const splitLabel = split === "rest" ? "Rest Day" : split === "full" ? "Full Body Day" : split[0].toUpperCase() + split.slice(1) + " Day";
-  document.getElementById("dashSub").textContent = `Week ${week} · ${splitLabel}`;
-
-  document.getElementById("startDate").value = getStartDate();
-
-  const nowMinutes = now.getHours() * 60 + now.getMinutes();
-  const tl = document.getElementById("timeline");
-  tl.innerHTML = "";
-  SCHEDULE.forEach((item) => {
-    const [h, m] = parseTime(item.time);
-    const itemMinutes = h * 60 + m;
-    const isPast = nowMinutes > itemMinutes + 20;
-    const isActive = Math.abs(nowMinutes - itemMinutes) <= 20;
-    const div = document.createElement("div");
-    div.className = "tl-item" + (isActive ? " active" : "") + (isPast ? " done" : "");
-    div.innerHTML = `
-      <div class="tl-dot"></div>
-      <div class="tl-time">${item.time}</div>
-      <div class="tl-label">${item.label}</div>
-    `;
-    tl.appendChild(div);
-  });
-
-  const { entry } = getTodayLog();
-  document.getElementById("statWeight").textContent = entry.weight ? entry.weight : "--";
-  document.getElementById("statWater").textContent = `${entry.water || 0}/8`;
-  document.getElementById("statStreak").textContent = computeStreak();
-
-  const row = document.getElementById("weekBadgeRow");
-  row.innerHTML = "";
-  [1, 2, 3, 4].forEach(w => {
-    const chip = document.createElement("div");
-    chip.className = "chip" + (w === week ? " active" : "");
-    chip.textContent = "Week " + w;
-    row.appendChild(chip);
-  });
-}
-
-function computeStreak() {
-  const logs = getLogs();
-  let streak = 0;
-  let d = new Date();
-  while (true) {
-    const k = todayKey(d);
-    const e = logs[k];
-    const hasActivity = e && (e.weight || (e.checks && Object.values(e.checks).some(v => v)));
-    if (!hasActivity) break;
-    streak++;
-    d.setDate(d.getDate() - 1);
+  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+  html,body{margin:0;padding:0;background:var(--ink);color:var(--text);font-family:var(--font-body);}
+  body{
+    padding-bottom:84px;
+    min-height:100vh;
+    background:
+      radial-gradient(1200px 400px at 50% -10%, rgba(232,169,59,0.08), transparent 60%),
+      var(--ink);
   }
-  return streak;
-}
+  ::selection{background:var(--gold); color:#151515;}
+  a{color:var(--gold);}
+  h1,h2,h3{font-family:var(--font-display); font-weight:400; letter-spacing:0.3px; margin:0;}
+  .mono{font-family:var(--font-mono);}
+  .container{max-width:560px; margin:0 auto; padding: 18px 16px 8px;}
 
-document.getElementById("startDate").addEventListener("change", (e) => {
-  localStorage.setItem(LS.startDate, e.target.value);
-  renderTodayTab();
-});
-
-// ---------- Workout tab ----------
-function renderWorkoutTab() {
-  const selDateStr = getWorkoutSelDate();
-  const workoutDateElem = document.getElementById("workoutDate");
-  if (workoutDateElem) workoutDateElem.value = selDateStr;
-  
-  renderQuickDateChips(selDateStr);
-
-  const selDate = parseDateKey(selDateStr);
-  const currentWeek = weekNumberForDate(selDate);
-  const previewWeek = parseInt(localStorage.getItem(LS.selWeek)) || currentWeek;
-  const isPreview = previewWeek !== currentWeek;
-  const split = splitTypeForDate(selDate);
-  const isToday = selDateStr === todayKey();
-
-  const dayName = selDate.toLocaleDateString(undefined, { weekday: "long" });
-  const dateLabel = selDate.toLocaleDateString(undefined, { day: "2-digit", month: "short" });
-  const splitLabel = split === "rest" ? "REST DAY" : split === "full" ? "FULL BODY DAY" : split.toUpperCase() + " DAY";
-  
-  const todaySplitElem = document.getElementById("todaySplitBig");
-  if (todaySplitElem) {
-    todaySplitElem.textContent = `${isToday ? "TODAY" : dayName.toUpperCase()} ${dateLabel} · ${splitLabel}`;
+  .topbar{
+    position:sticky; top:0; z-index:20;
+    background:linear-gradient(180deg, rgba(17,20,26,0.98), rgba(17,20,26,0.9));
+    backdrop-filter: blur(6px);
+    border-bottom:1px solid var(--line);
   }
-  
-  const dayFocusElem = document.getElementById("dayFocusNote");
-  if (dayFocusElem) {
-    dayFocusElem.textContent = (isPreview ? `Previewing Week ${previewWeek} exercises (won't be saved unless it matches ${dateLabel}'s actual Week ${currentWeek}). ` : "") + SPLIT_FOCUS[split];
+  .topbar-inner{max-width:560px;margin:0 auto;padding:14px 16px 12px;display:flex;align-items:center;justify-content:space-between;}
+  .brand{display:flex; align-items:center; gap:10px;}
+  .brand-mark{
+    width:34px;height:34px;border-radius:8px;
+    background:linear-gradient(135deg, var(--gold), var(--coral));
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--font-display); color:#151515; font-size:16px;
+  }
+  .brand-title{font-family:var(--font-display); font-size:19px; letter-spacing:1px;}
+  .brand-sub{font-size:10px; color:var(--text-dim); letter-spacing:2px; text-transform:uppercase; margin-top:1px;}
+  .date-pill{
+    font-family:var(--font-mono); font-size:12px; color:var(--text-dim);
+    background:var(--surface); border:1px solid var(--line); padding:6px 10px; border-radius:20px;
   }
 
-  const weekRow = document.getElementById("weekSelectRow");
-  if (weekRow) {
-    weekRow.innerHTML = "";
-    [1, 2, 3, 4].forEach(w => {
-      const chip = document.createElement("button");
-      chip.className = "chip" + (w === previewWeek ? " active" : "");
-      chip.textContent = "Week " + w + (w === currentWeek ? " (matches this date)" : "");
-      chip.onclick = () => { localStorage.setItem(LS.selWeek, w); renderWorkoutTab(); };
-      weekRow.appendChild(chip);
-    });
+  .card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius: var(--radius);
+    padding:16px;
+    margin-bottom:14px;
   }
+  .card-title{font-size:13px; text-transform:uppercase; letter-spacing:1.5px; color:var(--gold); margin-bottom:10px; font-weight:600;}
+  .card-sub{color:var(--text-dim); font-size:13px; margin-top:-6px; margin-bottom:12px;}
 
-  const list = document.getElementById("exerciseList");
-  if (!list) return;
-  list.innerHTML = "";
-
-  if (split === "rest") {
-    list.innerHTML = `<div class="card"><div class="card-title">Rest &amp; Recovery</div><div class="card-sub" style="margin-bottom:0;">No lifting on ${dateLabel}. Light walk, stretching, or mobility work is great here — let the muscle rebuild.</div></div>`;
-    return;
+  .timeline{position:relative; margin-left:6px; padding-left:22px; border-left:2px solid var(--line);}
+  .tl-item{position:relative; padding-bottom:20px;}
+  .tl-item:last-child{padding-bottom:2px;}
+  .tl-dot{
+    position:absolute; left:-29px; top:2px; width:14px; height:14px; border-radius:50%;
+    background:var(--ink-2); border:2px solid var(--gold-dim);
   }
+  .tl-item.active .tl-dot{background:var(--gold); border-color:var(--gold); box-shadow:0 0 0 4px rgba(232,169,59,0.15);}
+  .tl-item.done .tl-dot{background:var(--mint); border-color:var(--mint);}
+  .tl-time{font-family:var(--font-mono); font-size:12px; color:var(--gold); font-weight:600;}
+  .tl-label{font-size:14.5px; margin-top:2px;}
+  .tl-meta{font-size:12px; color:var(--text-dim); margin-top:1px;}
 
-  const exercises = WORKOUT_DATA[previewWeek][split];
-  const { entry } = getEntryForDate(selDateStr);
+  .bottom-nav{
+    position:fixed; bottom:0; left:0; right:0; z-index:30;
+    background:rgba(24,28,36,0.97); backdrop-filter:blur(8px);
+    border-top:1px solid var(--line);
+    display:flex; padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+  }
+  .nav-btn{
+    flex:1; background:none; border:none; color:var(--text-faint);
+    display:flex; flex-direction:column; align-items:center; gap:3px;
+    padding:8px 2px; font-family:var(--font-body); font-size:10.5px; letter-spacing:0.5px;
+    cursor:pointer; border-radius:10px; transition: color .15s ease;
+  }
+  .nav-btn svg{width:20px; height:20px;}
+  .nav-btn.active{color:var(--gold);}
+  .nav-btn.active .nav-ic{background:rgba(232,169,59,0.12); border-radius:10px;}
+  .nav-ic{padding:4px 10px;}
 
-  exercises.forEach((ex, i) => {
-    const checkId = `w${previewWeek}_${split}_${i}`;
-    const isChecked = !!entry.checks[checkId];
-    const card = document.createElement("div");
-    card.className = "ex-card";
-    card.innerHTML = `
-      <img class="ex-img" src="${ex.img}" alt="${ex.name}">
-      <div class="ex-body">
-        <div class="ex-name">${ex.name}</div>
-        <div class="ex-stats">
-          <span>SETS <b>${ex.sets}</b></span>
-          <span>REPS <b>${ex.reps}</b></span>
-          <span>REST <b>${ex.rest}</b></span>
-        </div>
+  .view{display:none;}
+  .view.active{display:block; animation: fadein .25s ease;}
+  @keyframes fadein{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);}}
+
+  .row{display:flex; gap:8px; flex-wrap:wrap;}
+  .chip{
+    border:1px solid var(--line); background:var(--surface-2); color:var(--text-dim);
+    padding:7px 14px; border-radius:20px; font-size:12.5px; cursor:pointer; font-family:var(--font-body);
+    font-weight:600;
+  }
+  .chip.active{background:var(--gold); border-color:var(--gold); color:#151515;}
+  .btn{
+    background:var(--gold); color:#151515; border:none; padding:11px 16px; border-radius:10px;
+    font-weight:700; font-size:14px; cursor:pointer; font-family:var(--font-body);
+  }
+  .btn.ghost{background:transparent; border:1px solid var(--line); color:var(--text);}
+  .btn.coral{background:var(--coral);}
+  .btn.small{padding:8px 12px; font-size:12.5px;}
+  .btn.block{width:100%;}
+  .btn:disabled{opacity:.5;}
+
+  .split-badge{
+    display:inline-flex; align-items:center; gap:8px;
+    background:linear-gradient(135deg, rgba(232,169,59,0.15), rgba(255,122,89,0.1));
+    border:1px solid var(--gold-dim); border-radius:12px; padding:10px 14px; margin-bottom:6px;
+  }
+  .split-badge .big{font-family:var(--font-display); font-size:20px; color:var(--gold);}
+
+  .ex-card{display:flex; gap:12px; background:var(--surface-2); border:1px solid var(--line); border-radius:12px; padding:10px; margin-bottom:10px;}
+  .ex-img{width:78px; height:78px; border-radius:9px; object-fit:cover; flex-shrink:0; background:#111;}
+  .ex-body{flex:1; min-width:0;}
+  .ex-name{font-size:14.5px; font-weight:700;}
+  .ex-stats{display:flex; gap:12px; margin-top:5px; font-family:var(--font-mono); font-size:12px; color:var(--text-dim);}
+  .ex-stats b{color:var(--text);}
+  .ex-check{display:flex; align-items:center;}
+  .check{
+    width:26px; height:26px; border-radius:8px; border:2px solid var(--line); background:transparent;
+    display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;
+  }
+  .check.on{background:var(--mint); border-color:var(--mint); color:#0c1a14; font-weight:900;}
+
+  .meal-card{background:var(--surface-2); border:1px solid var(--line); border-radius:12px; padding:12px; margin-bottom:10px;}
+  .meal-head{display:flex; justify-content:space-between; align-items:flex-start; gap:8px;}
+  .meal-time{font-family:var(--font-mono); font-size:11.5px; color:var(--gold); font-weight:600;}
+  .meal-title{font-size:14.5px; font-weight:700; margin-top:2px;}
+  .meal-opt{font-size:13px; color:var(--text-dim); margin-top:6px; line-height:1.5;}
+  .tag{display:inline-block; font-size:9.5px; text-transform:uppercase; letter-spacing:0.8px; padding:2px 7px; border-radius:6px; margin-right:5px; font-weight:700;}
+  .tag.veg{background:rgba(95,214,168,0.15); color:var(--mint);}
+  .tag.nonveg{background:rgba(255,122,89,0.15); color:var(--coral);}
+
+  .log-box{margin-top:12px; padding-top:10px; border-top:1px dashed var(--line);}
+  .log-box-title{font-size:11px; text-transform:uppercase; letter-spacing:0.7px; color:var(--text-dim); margin-bottom:8px; font-weight:700;}
+  .log-form{display:flex; gap:6px; margin-bottom:8px;}
+  select, .log-form input[type=number]{
+    background:var(--ink-2); border:1px solid var(--line); color:var(--text); padding:8px 8px;
+    border-radius:8px; font-family:var(--font-body); font-size:12.5px;
+  }
+  select{flex:2; min-width:0;}
+  .log-form input[type=number]{flex:0 0 54px; font-family:var(--font-mono);}
+  .logged-item{display:flex; justify-content:space-between; align-items:center; background:var(--ink-2); border-radius:8px; padding:7px 10px; margin-bottom:6px; font-size:12.5px;}
+  .logged-item .macros{color:var(--text-dim); font-family:var(--font-mono); font-size:11px;}
+  .remove-x{background:none; border:none; color:var(--red); font-size:16px; cursor:pointer; padding:0 4px;}
+
+  .stat-grid{display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;}
+  .stat-grid.four{grid-template-columns:1fr 1fr 1fr 1fr;}
+  .stat-box{background:var(--surface-2); border:1px solid var(--line); border-radius:10px; padding:10px; text-align:center;}
+  .stat-num{font-family:var(--font-mono); font-size:19px; font-weight:600; color:var(--gold);}
+  .stat-lbl{font-size:10px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.6px; margin-top:2px;}
+
+  .bar-track{background:var(--ink-2); border-radius:8px; height:8px; overflow:hidden; margin-top:6px;}
+  .bar-fill{height:100%; background:linear-gradient(90deg, var(--gold), var(--coral)); border-radius:8px;}
+  .target-row{margin-bottom:10px;}
+  .target-row .tr-head{display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:3px;}
+  .target-row .tr-head b{font-family:var(--font-mono); color:var(--text);}
+
+  input[type=number], input[type=text], input[type=date]{
+    background:var(--ink-2); border:1px solid var(--line); color:var(--text); padding:10px 12px;
+    border-radius:9px; font-family:var(--font-mono); font-size:14px; width:100%;
+  }
+  label{font-size:11.5px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.7px; display:block; margin-bottom:5px;}
+  .field{margin-bottom:12px;}
+
+  table{width:100%; border-collapse:collapse; font-size:13px;}
+  th,td{text-align:left; padding:7px 4px; border-bottom:1px solid var(--line);}
+  th{color:var(--text-dim); font-weight:600; font-size:11px; text-transform:uppercase;}
+  td.mono{font-family:var(--font-mono);}
+
+  .empty{color:var(--text-faint); font-size:13px; text-align:center; padding:20px 0;}
+  .note{font-size:12.5px; color:var(--text-dim); line-height:1.6; background:rgba(232,169,59,0.06); border:1px dashed var(--gold-dim); padding:10px 12px; border-radius:10px; margin-bottom:12px;}
+  code{background:var(--ink-2); padding:2px 6px; border-radius:5px; font-size:12px;}
+  .divider{height:1px; background:var(--line); margin:14px 0;}
+  .toast{
+    position:fixed; bottom:96px; left:50%; transform:translateX(-50%);
+    background:var(--mint); color:#0c1a14; padding:9px 18px; border-radius:20px;
+    font-weight:700; font-size:13px; z-index:50; opacity:0; pointer-events:none; transition:opacity .2s ease;
+  }
+  .toast.show{opacity:1;}
+
+  .alert{border-radius:10px; padding:10px 12px; margin-bottom:8px; font-size:13px; line-height:1.5; display:flex; gap:8px;}
+  .alert.warn{background:rgba(255,122,89,0.1); border:1px solid rgba(255,122,89,0.35); color:#ffb59f;}
+  .alert.ok{background:rgba(95,214,168,0.1); border:1px solid rgba(95,214,168,0.35); color:var(--mint);}
+  .alert.tip{background:rgba(232,169,59,0.1); border:1px solid rgba(232,169,59,0.35); color:var(--gold);}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <div class="brand-mark">Y</div>
+      <div>
+        <div class="brand-title">YUVA</div>
+        <div class="brand-sub">Daily Recomp Tracker</div>
       </div>
-      <div class="ex-check">
-        ${isPreview
-          ? `<span style="font-size:10px; color:var(--text-faint); text-transform:uppercase;">Preview</span>`
-          : `<button class="check${isChecked ? " on" : ""}" data-id="${checkId}">${isChecked ? "✓" : ""}</button>`
-        }
-      </div>
-    `;
-    list.appendChild(card);
-  });
-
-  list.querySelectorAll(".check").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const { logs, key, entry } = getEntryForDate(selDateStr);
-      const id = btn.dataset.id;
-      entry.checks[id] = !entry.checks[id];
-      logs[key] = entry;
-      saveLogs(logs);
-      btn.classList.toggle("on");
-      btn.textContent = entry.checks[id] ? "✓" : "";
-    });
-  });
-}
-
-function renderQuickDateChips(selDateStr) {
-  const row = document.getElementById("quickDateRow");
-  if (!row) return;
-  row.innerHTML = "";
-  const start = parseDateKey(getStartDate());
-  const today = parseDateKey(todayKey());
-  let days = [];
-  for (let d = new Date(start); d <= today; d.setDate(d.getDate() + 1)) {
-    days.push(todayKey(d));
-  }
-  if (days.length > 14) days = days.slice(-14);
-  days.forEach(k => {
-    const d = parseDateKey(k);
-    const chip = document.createElement("button");
-    chip.className = "chip" + (k === selDateStr ? " active" : "");
-    chip.textContent = (k === todayKey() ? "Today" : d.toLocaleDateString(undefined, { weekday: "short", day: "numeric" }));
-    chip.onclick = () => { 
-      setWorkoutSelDate(k); 
-      localStorage.setItem(LS.selWeek, weekNumberForDate(parseDateKey(k)));
-      renderWorkoutTab(); 
-    };
-    row.appendChild(chip);
-  });
-}
-
-const workoutDateElem = document.getElementById("workoutDate");
-if (workoutDateElem) {
-  workoutDateElem.addEventListener("change", (e) => {
-    if (!e.target.value) return;
-    setWorkoutSelDate(e.target.value);
-    localStorage.setItem(LS.selWeek, weekNumberForDate(parseDateKey(e.target.value)));
-    renderWorkoutTab();
-  });
-}
-
-// ---------- Diet tab ----------
-function computeDayMacros(entry) {
-  const totals = { calories: 0, protein: 0, carbs: 0, fiber: 0 };
-  if (!entry || !entry.foodLog) return totals;
-  Object.values(entry.foodLog).forEach(items => {
-    (items || []).forEach(it => {
-      const f = findFood(it.foodId);
-      if (!f) return;
-      totals.calories += f.cal * it.qty;
-      totals.protein += f.protein * it.qty;
-      totals.carbs += f.carbs * it.qty;
-      totals.fiber += f.fiber * it.qty;
-    });
-  });
-  return totals;
-}
-
-function renderIntakeTargets(totals) {
-  const box = document.getElementById("intakeTargets");
-  if (!box) return;
-  const rows = [
-    { key: "calories", label: "Calories", unit: "kcal", target: DAILY_TARGET.calories },
-    { key: "protein", label: "Protein", unit: "g", target: DAILY_TARGET.protein },
-    { key: "carbs", label: "Carbs", unit: "g", target: DAILY_TARGET.carbs },
-    { key: "fiber", label: "Fiber", unit: "g", target: DAILY_TARGET.fiber }
-  ];
-  box.innerHTML = rows.map(r => {
-    const val = Math.round(totals[r.key] * 10) / 10;
-    const pct = Math.min(100, Math.round((totals[r.key] / r.target) * 100));
-    return `
-      <div class="target-row">
-        <div class="tr-head"><span>${r.label}</span><b>${val} / ${r.target}${r.unit}</b></div>
-        <div class="bar-track"><div class="bar-fill" style="width:${pct}%;"></div></div>
-      </div>
-    `;
-  }).join("");
-}
-
-function foodOptionsHtml() {
-  return FOOD_DB.map(f => `<option value="${f.id}">${f.name} (${f.unit})</option>`).join("");
-}
-
-function renderDietTab() {
-  const { entry } = getTodayLog();
-  const totals = computeDayMacros(entry);
-  renderIntakeTargets(totals);
-
-  const list = document.getElementById("mealList");
-  if (!list) return;
-  list.innerHTML = "";
-  DIET_DATA.forEach((meal, i) => {
-    const checkId = `meal_${i}`;
-    const isChecked = !!entry.checks[checkId];
-    const optsHtml = meal.options.map(o =>
-      `<div class="meal-opt"><span class="tag ${o.tag}">${o.tag === "veg" ? "Veg" : "Non-Veg"}</span>${o.text}</div>`
-    ).join("");
-
-    const loggedItems = entry.foodLog[i] || [];
-    const loggedHtml = loggedItems.map((it, idx) => {
-      const f = findFood(it.foodId);
-      if (!f) return "";
-      return `
-        <div class="logged-item">
-          <span>${f.name} × ${it.qty}</span>
-          <span class="macros">${Math.round(f.cal * it.qty)}kcal · ${Math.round(f.protein * it.qty * 10) / 10}g P
-            <button class="remove-x" data-meal="${i}" data-idx="${idx}">✕</button>
-          </span>
-        </div>`;
-    }).join("");
-
-    const card = document.createElement("div");
-    card.className = "meal-card";
-    card.innerHTML = `
-      <div class="meal-head">
-        <div>
-          <div class="meal-time">${meal.time} · ${meal.slot}</div>
-          <div class="meal-title">${meal.title}</div>
-        </div>
-        <button class="check${isChecked ? " on" : ""}" data-id="${checkId}" style="min-width:26px;">${isChecked ? "✓" : ""}</button>
-      </div>
-      ${optsHtml}
-      <div class="meal-opt" style="color:var(--gold); margin-top:8px; font-size:11.5px;">${meal.macroNote}</div>
-      <div class="log-box">
-        <div class="log-box-title">What did you actually eat?</div>
-        <div id="loggedList_${i}">${loggedHtml || `<div class="card-sub" style="margin:0 0 6px;">Nothing logged yet for this meal.</div>`}</div>
-        <div class="log-form">
-          <select id="foodSelect_${i}">${foodOptionsHtml()}</select>
-          <input type="number" id="foodQty_${i}" value="1" min="0.5" step="0.5">
-          <button class="btn small" data-add-meal="${i}">Add</button>
-        </div>
-      </div>
-    `;
-    list.appendChild(card);
-  });
-
-  list.querySelectorAll(".check").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const { logs, key, entry } = getTodayLog();
-      const id = btn.dataset.id;
-      entry.checks[id] = !entry.checks[id];
-      logs[key] = entry;
-      saveLogs(logs);
-      btn.classList.toggle("on");
-      btn.textContent = entry.checks[id] ? "✓" : "";
-    });
-  });
-
-  list.querySelectorAll("[data-add-meal]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const mealIdx = btn.dataset.addMeal;
-      const foodId = document.getElementById(`foodSelect_${mealIdx}`).value;
-      const qty = parseFloat(document.getElementById(`foodQty_${mealIdx}`).value) || 1;
-      const { logs, key, entry } = getTodayLog();
-      if (!entry.foodLog[mealIdx]) entry.foodLog[mealIdx] = [];
-      entry.foodLog[mealIdx].push({ foodId, qty });
-      logs[key] = entry;
-      saveLogs(logs);
-      renderDietTab();
-      renderNutritionChart();
-      showToast("Food logged ✓");
-    });
-  });
-
-  list.querySelectorAll(".remove-x").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const mealIdx = btn.dataset.meal;
-      const idx = parseInt(btn.dataset.idx);
-      const { logs, key, entry } = getTodayLog();
-      entry.foodLog[mealIdx].splice(idx, 1);
-      logs[key] = entry;
-      saveLogs(logs);
-      renderDietTab();
-      renderNutritionChart();
-    });
-  });
-
-  renderNutritionChart();
-}
-
-function renderNutritionChart() {
-  const svg = document.getElementById("nutritionChart");
-  if (!svg) return;
-  const logs = getLogs();
-  const days = [];
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date();
-    d.setDate(d.getDate() - i);
-    days.push(d);
-  }
-  const values = days.map(d => {
-    const e = logs[todayKey(d)];
-    return e ? computeDayMacros(e).protein : 0;
-  });
-  const max = Math.max(DAILY_TARGET.protein, ...values, 10);
-  const w = 500, h = 160, padX = 24, padY = 24, barGap = 10;
-  const barW = (w - padX * 2 - barGap * (days.length - 1)) / days.length;
-
-  let bars = "";
-  days.forEach((d, i) => {
-    const val = values[i];
-    const barH = (val / max) * (h - padY * 2);
-    const x = padX + i * (barW + barGap);
-    const y = h - padY - barH;
-    const isToday = i === days.length - 1;
-    bars += `<rect x="${x}" y="${y}" width="${barW}" height="${barH}" rx="4" fill="${isToday ? '#e8a93b' : '#5fd6a8'}" opacity="${val > 0 ? 1 : 0.15}"/>`;
-    bars += `<text x="${x + barW / 2}" y="${h - 6}" font-size="10" fill="#9aa1b0" text-anchor="middle">${d.toLocaleDateString(undefined, { weekday: 'narrow' })}</text>`;
-    if (val > 0) bars += `<text x="${x + barW / 2}" y="${y - 5}" font-size="10" fill="#eef0f2" text-anchor="middle">${Math.round(val)}</text>`;
-  });
-  const targetY = h - padY - (DAILY_TARGET.protein / max) * (h - padY * 2);
-  bars += `<line x1="${padX}" y1="${targetY}" x2="${w - padX}" y2="${targetY}" stroke="#ff7a59" stroke-width="1.5" stroke-dasharray="4,4"/>`;
-
-  svg.innerHTML = bars;
-}
-
-// ---------- Progress tab (Weight & Water) ----------
-function renderProgressTab() {
-  const selDateStr = getProgressSelDate();
-  
-  // Dynamic Date Input Binding (if exists in HTML)
-  const progDateElem = document.getElementById("progressLogDate");
-  if (progDateElem) {
-    progDateElem.value = selDateStr;
-  }
-
-  const { entry } = getEntryForDate(selDateStr);
-  
-  const weightInput = document.getElementById("inputWeight");
-  if (weightInput) weightInput.value = entry.weight || "";
-  
-  const waterCount = document.getElementById("waterCount");
-  if (waterCount) waterCount.textContent = `${entry.water || 0} / 8`;
-  
-  const waterLiters = document.getElementById("waterLiters");
-  if (waterLiters) waterLiters.textContent = (((entry.water || 0) * GLASS_ML) / 1000).toFixed(2) + " L";
-
-  const timingRow = document.getElementById("weighTimingRow");
-  if (timingRow) {
-    timingRow.innerHTML = "";
-    [["before", "Before Workout"], ["after", "After Workout"]].forEach(([val, label]) => {
-      const chip = document.createElement("button");
-      chip.className = "chip" + (entry.weighTiming === val ? " active" : "");
-      chip.textContent = label;
-      chip.onclick = () => {
-        const { logs, key, entry } = getEntryForDate(getProgressSelDate());
-        entry.weighTiming = val;
-        logs[key] = entry;
-        saveLogs(logs);
-        renderProgressTab();
-      };
-      timingRow.appendChild(chip);
-    });
-  }
-
-  renderHistory();
-  renderChart();
-}
-
-const progDateElem = document.getElementById("progressLogDate");
-if (progDateElem) {
-  progDateElem.addEventListener("change", (e) => {
-    if (!e.target.value) return;
-    setProgressSelDate(e.target.value);
-    renderProgressTab();
-  });
-}
-
-document.getElementById("waterPlus")?.addEventListener("click", () => {
-  const { logs, key, entry } = getEntryForDate(getProgressSelDate());
-  entry.water = Math.min(20, (entry.water || 0) + 1);
-  logs[key] = entry; 
-  saveLogs(logs);
-  document.getElementById("waterCount").textContent = `${entry.water} / 8`;
-  document.getElementById("waterLiters").textContent = ((entry.water * GLASS_ML) / 1000).toFixed(2) + " L";
-});
-
-document.getElementById("waterMinus")?.addEventListener("click", () => {
-  const { logs, key, entry } = getEntryForDate(getProgressSelDate());
-  entry.water = Math.max(0, (entry.water || 0) - 1);
-  logs[key] = entry; 
-  saveLogs(logs);
-  document.getElementById("waterCount").textContent = `${entry.water} / 8`;
-  document.getElementById("waterLiters").textContent = ((entry.water * GLASS_ML) / 1000).toFixed(2) + " L";
-});
-
-document.getElementById("saveProgress")?.addEventListener("click", () => {
-  const targetDate = getProgressSelDate();
-  const { logs, key, entry } = getEntryForDate(targetDate);
-  const w = parseFloat(document.getElementById("inputWeight").value);
-  if (w) entry.weight = w;
-  logs[key] = entry;
-  saveLogs(logs);
-  showToast(`Saved log for ${targetDate} ✓`);
-  renderHistory();
-  renderChart();
-  renderTodayTab();
-});
-
-function renderHistory() {
-  const logs = getLogs();
-  const keys = Object.keys(logs).sort().reverse().slice(0, 14);
-  const box = document.getElementById("historyTable");
-  if (!box) return;
-  if (!keys.length) { box.innerHTML = `<div class="empty">No entries yet. Log above.</div>`; return; }
-  let html = `<table><tr><th>Date</th><th>Weight</th><th>When</th><th>Water</th></tr>`;
-  keys.forEach(k => {
-    const e = logs[k];
-    const when = e.weighTiming ? (e.weighTiming === "before" ? "Before" : "After") : "-";
-    html += `<tr><td class="mono">${k.slice(5)}</td><td class="mono">${e.weight || "-"}</td><td class="mono">${when}</td><td class="mono">${e.water || 0}/8 · ${(((e.water || 0) * GLASS_ML) / 1000).toFixed(2)}L</td></tr>`;
-  });
-  html += `</table>`;
-  box.innerHTML = html;
-}
-
-function renderChart() {
-  const logs = getLogs();
-  const keys = Object.keys(logs).filter(k => logs[k].weight).sort();
-  const svg = document.getElementById("weightChart");
-  if (!svg) return;
-  svg.innerHTML = "";
-  if (keys.length < 2) {
-    svg.innerHTML = `<text x="250" y="80" fill="#6b7280" font-size="13" text-anchor="middle">Log weight on 2+ days to see your trend</text>`;
-    return;
-  }
-  const weights = keys.map(k => logs[k].weight);
-  const min = Math.min(...weights) - 0.5;
-  const max = Math.max(...weights) + 0.5;
-  const w = 500, h = 160, padX = 20, padY = 20;
-  const stepX = (w - padX * 2) / (keys.length - 1);
-  const scaleY = v => h - padY - ((v - min) / (max - min || 1)) * (h - padY * 2);
-
-  let points = keys.map((k, i) => `${padX + i * stepX},${scaleY(logs[k].weight)}`).join(" ");
-  let dots = keys.map((k, i) => {
-    const x = padX + i * stepX, y = scaleY(logs[k].weight);
-    return `<circle cx="${x}" cy="${y}" r="3.5" fill="#e8a93b" />`;
-  }).join("");
-
-  svg.innerHTML = `
-    <polyline points="${points}" fill="none" stroke="#e8a93b" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
-    ${dots}
-    <line x1="${padX}" y1="${h - padY}" x2="${w - padX}" y2="${h - padY}" stroke="#333a49" stroke-width="1"/>
-  `;
-}
-
-// ---------- Dashboard / Insights tab ----------
-function renderInsightsTab() {
-  const logs = getLogs();
-  renderLeanStats(logs);
-  renderAdherence(logs);
-  const review = renderYesterdayAlerts(logs);
-  renderAdjustedTargets(review);
-}
-
-function renderLeanStats(logs) {
-  const weightKeys = Object.keys(logs).filter(k => logs[k].weight).sort();
-  const box = document.getElementById("leanStats");
-  if (!box) return;
-  if (!weightKeys.length) {
-    box.innerHTML = `<div class="empty" style="grid-column:1/-1;">Log your weight in Progress to start tracking trend.</div>`;
-    return;
-  }
-  const start = logs[weightKeys[0]].weight;
-  const current = logs[weightKeys[weightKeys.length - 1]].weight;
-  const delta = Math.round((current - start) * 10) / 10;
-  const deltaStr = (delta > 0 ? "+" : "") + delta + " kg";
-  box.innerHTML = `
-    <div class="stat-box"><div class="stat-num mono">${start}</div><div class="stat-lbl">Start (kg)</div></div>
-    <div class="stat-box"><div class="stat-num mono">${current}</div><div class="stat-lbl">Current (kg)</div></div>
-    <div class="stat-box"><div class="stat-num mono">${deltaStr}</div><div class="stat-lbl">Change</div></div>
-    <div class="stat-box"><div class="stat-num mono">${computeStreak()}</div><div class="stat-lbl">Day Streak</div></div>
-  `;
-}
-
-function weekStartDate() {
-  const d = new Date();
-  const dow = d.getDay();
-  const diffToMon = dow === 0 ? 6 : dow - 1;
-  d.setDate(d.getDate() - diffToMon);
-  d.setHours(0, 0, 0, 0);
-  return d;
-}
-
-function renderAdherence(logs) {
-  const monday = weekStartDate();
-  const today = new Date();
-  let expectedEx = 0, actualEx = 0, expectedMeals = 0, actualMeals = 0, proteinDays = 0, proteinTotal = 0;
-
-  for (let d = new Date(monday); d <= today; d.setDate(d.getDate() + 1)) {
-    const key = todayKey(d);
-    const e = logs[key];
-    const split = splitTypeForDate(d);
-    const week = weekNumberForDate(d);
-    if (split !== "rest") {
-      const list = WORKOUT_DATA[week][split] || [];
-      expectedEx += list.length;
-      if (e) {
-        list.forEach((ex, i) => { if (e.checks && e.checks[`w${week}_${split}_${i}`]) actualEx++; });
-      }
-    }
-    expectedMeals += 6;
-    if (e) {
-      for (let m = 0; m < 6; m++) { if (e.checks && e.checks[`meal_${m}`]) actualMeals++; }
-      const macros = computeDayMacros(e);
-      if (macros.protein > 0) { proteinDays++; proteinTotal += macros.protein; }
-    }
-  }
-
-  const exPct = expectedEx ? Math.round((actualEx / expectedEx) * 100) : 0;
-  const mealPct = expectedMeals ? Math.round((actualMeals / expectedMeals) * 100) : 0;
-  const avgProtein = proteinDays ? Math.round(proteinTotal / proteinDays) : 0;
-
-  const barElem = document.getElementById("adherenceBars");
-  if (!barElem) return;
-  barElem.innerHTML = `
-    <div class="target-row">
-      <div class="tr-head"><span>Workout completion</span><b>${actualEx}/${expectedEx} · ${exPct}%</b></div>
-      <div class="bar-track"><div class="bar-fill" style="width:${exPct}%;"></div></div>
     </div>
-    <div class="target-row">
-      <div class="tr-head"><span>Meals logged</span><b>${actualMeals}/${expectedMeals} · ${mealPct}%</b></div>
-      <div class="bar-track"><div class="bar-fill" style="width:${mealPct}%;"></div></div>
+    <div class="date-pill mono" id="headerDate">--</div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- TODAY -->
+  <div class="view active" id="view-today">
+    <div class="card">
+      <div class="card-title">Today's Line</div>
+      <div class="card-sub" id="dashSub">Week — · Day type —</div>
+      <div class="timeline" id="timeline"></div>
     </div>
-    <div class="target-row">
-      <div class="tr-head"><span>Avg daily protein</span><b>${avgProtein}g / ${DAILY_TARGET.protein}g</b></div>
-      <div class="bar-track"><div class="bar-fill" style="width:${Math.min(100, Math.round((avgProtein / DAILY_TARGET.protein) * 100))}%;"></div></div>
+
+    <div class="card">
+      <div class="card-title">Quick Stats</div>
+      <div class="stat-grid">
+        <div class="stat-box"><div class="stat-num mono" id="statWeight">--</div><div class="stat-lbl">Weight (kg)</div></div>
+        <div class="stat-box"><div class="stat-num mono" id="statWater">0/8</div><div class="stat-lbl">Water</div></div>
+        <div class="stat-box"><div class="stat-num mono" id="statStreak">0</div><div class="stat-lbl">Day Streak</div></div>
+      </div>
     </div>
-  `;
-}
 
-function renderYesterdayAlerts(logs) {
-  const y = new Date();
-  y.setDate(y.getDate() - 1);
-  const key = todayKey(y);
-  const e = logs[key];
-  const split = splitTypeForDate(y);
-  const week = weekNumberForDate(y);
-  const box = document.getElementById("yesterdayAlerts");
-  const alerts = [];
-  let proteinShortfall = 0;
-  let workoutMissed = false;
-  let workoutInfo = null;
+    <div class="card">
+      <div class="card-title">Program Week</div>
+      <div class="card-sub">Set the date you started Week 1 — the app auto-rotates weeks 1→4 and repeats. The day (Legs/Push/Pull/Full/Rest) is always picked automatically from today's weekday.</div>
+      <div class="field">
+        <label>Program Start Date</label>
+        <input type="date" id="startDate">
+      </div>
+      <div class="row" id="weekBadgeRow"></div>
+    </div>
+  </div>
 
-  if (split !== "rest") {
-    const list = WORKOUT_DATA[week][split] || [];
-    let done = 0;
-    if (e) list.forEach((ex, i) => { if (e.checks && e.checks[`w${week}_${split}_${i}`]) done++; });
-    if (done < list.length) {
-      workoutMissed = true;
-      workoutInfo = { split, done, total: list.length };
-      alerts.push({ type: "warn", text: `Only ${done}/${list.length} ${split} exercises marked done yesterday.` });
-    }
-  }
+  <!-- WORKOUT -->
+  <div class="view" id="view-workout">
+    <div class="card">
+      <div class="card-title">Editing Day</div>
+      <div class="card-sub">Pick any date to log or backfill workouts.</div>
+      <div class="field">
+        <label>Date</label>
+        <input type="date" id="workoutDate">
+      </div>
+      <div class="row" id="quickDateRow"></div>
+    </div>
+    <div class="card">
+      <div class="split-badge">
+        <span class="big" id="todaySplitBig">--</span>
+      </div>
+      <div class="card-sub" id="dayFocusNote" style="margin:6px 0 0;"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Preview Week (exercises rotate every week)</div>
+      <div class="row" id="weekSelectRow"></div>
+    </div>
+    <div id="exerciseList"></div>
+  </div>
 
-  let mealsChecked = 0;
-  if (e) for (let m = 0; m < 6; m++) { if (e.checks && e.checks[`meal_${m}`]) mealsChecked++; }
-  if (mealsChecked < 6) {
-    alerts.push({ type: "warn", text: `${6 - mealsChecked} meal slot(s) not checked off yesterday.` });
-  }
+  <!-- DIET -->
+  <div class="view" id="view-diet">
+    <div class="card">
+      <div class="card-title">Today's Intake</div>
+      <div id="intakeTargets"></div>
+    </div>
+    <div class="note">Target for 76 kg recomp: ~2250–2400 kcal · 150–160g protein · 35g+ fiber. Swap Veg ⇄ Non-Veg freely — macros stay close either way. Log what you actually ate under each meal to auto-track your numbers.</div>
+    <div id="mealList"></div>
+    <div class="card">
+      <div class="card-title">This Week's Nutrition Trend</div>
+      <div class="card-sub">Protein (g) logged per day, last 7 days</div>
+      <svg id="nutritionChart" viewBox="0 0 500 160" style="width:100%; height:auto;"></svg>
+    </div>
+  </div>
 
-  const macros = e ? computeDayMacros(e) : { protein: 0 };
-  if (macros.protein > 0 && macros.protein < DAILY_TARGET.protein - 10) {
-    proteinShortfall = Math.round(DAILY_TARGET.protein - macros.protein);
-    alerts.push({ type: "warn", text: `Protein was ${proteinShortfall}g short yesterday (${Math.round(macros.protein)}g vs ${DAILY_TARGET.protein}g target).` });
-  } else if (macros.protein === 0) {
-    alerts.push({ type: "warn", text: `No food logged yesterday — can't verify protein intake.` });
-  }
+  <!-- PROGRESS -->
+  <div class="view" id="view-progress">
+    <div class="card">
+      <div class="card-title">Editing Progress Log</div>
+      <div class="card-sub">Pick any date (e.g. Monday) to log or update past Weight & Water intake.</div>
+      <div class="field">
+        <label>Select Date</label>
+        <input type="date" id="progressLogDate">
+      </div>
+      <div class="row" id="progressQuickDateRow" style="margin-bottom:12px;"></div>
 
-  if (box) {
-    if (!alerts.length) {
-      box.innerHTML = `<div class="alert ok">✅ Yesterday was fully on track — workout done, meals logged, protein hit.</div>`;
-    } else {
-      box.innerHTML = alerts.map(a => `<div class="alert warn">⚠️ ${a.text}</div>`).join("");
-    }
-  }
+      <div class="field">
+        <label>Body Weight (kg)</label>
+        <input type="number" id="inputWeight" step="0.1" placeholder="76.0">
+      </div>
+      <div class="field">
+        <label>Weighed In</label>
+        <div class="row" id="weighTimingRow"></div>
+      </div>
+      <div class="field">
+        <label>Water Intake</label>
+        <div class="row" id="waterRow" style="align-items:center;">
+          <button class="btn ghost" id="waterMinus" style="padding:8px 14px;">−</button>
+          <div class="mono" style="font-size:18px; min-width:60px; text-align:center;" id="waterCount">0 / 8</div>
+          <button class="btn ghost" id="waterPlus" style="padding:8px 14px;">+</button>
+          <span style="font-size:12px; color:var(--text-dim);" id="waterLiters">0.00 L</span>
+        </div>
+        <div class="card-sub" style="margin-top:6px; margin-bottom:0;">Assumes 1 glass ≈ 250ml.</div>
+      </div>
+      <button class="btn block" id="saveProgress">Save Selected Day's Log</button>
+    </div>
 
-  return { proteinShortfall, workoutMissed, workoutInfo };
-}
+    <div class="card">
+      <div class="card-title">Weight Trend</div>
+      <svg id="weightChart" viewBox="0 0 500 160" style="width:100%; height:auto;"></svg>
+    </div>
 
-function renderAdjustedTargets(review) {
-  const box = document.getElementById("adjustedTargets");
-  if (!box) return;
-  const bumps = [];
+    <div class="card">
+      <div class="card-title">History</div>
+      <div id="historyTable"></div>
+    </div>
+  </div>
 
-  const proteinBump = Math.min(25, Math.round((review.proteinShortfall || 0) * 0.5));
-  const adjustedProtein = DAILY_TARGET.protein + proteinBump;
-  if (proteinBump > 0) {
-    bumps.push(`<div class="alert tip">🎯 Protein target today: <b>${adjustedProtein}g</b> (base ${DAILY_TARGET.protein}g + ${proteinBump}g catch-up for yesterday's shortfall).</div>`);
-  } else {
-    bumps.push(`<div class="alert tip">🎯 Protein target today: <b>${DAILY_TARGET.protein}g</b> — on track, no catch-up needed.</div>`);
-  }
+  <!-- DASHBOARD / INSIGHTS -->
+  <div class="view" id="view-insights">
+    <div class="card">
+      <div class="card-title">Lean Progress</div>
+      <div class="stat-grid four" id="leanStats"></div>
+    </div>
 
-  if (review.workoutMissed && review.workoutInfo) {
-    bumps.push(`<div class="alert tip">💪 Yesterday's ${review.workoutInfo.split} day was incomplete (${review.workoutInfo.done}/${review.workoutInfo.total}). Add 1 extra set to each main lift in today's session to make up lost volume.</div>`);
-  }
+    <div class="card">
+      <div class="card-title">This Week's Adherence</div>
+      <div id="adherenceBars"></div>
+    </div>
 
-  box.innerHTML = bumps.join("");
-}
+    <div class="card">
+      <div class="card-title">Yesterday's Review</div>
+      <div id="yesterdayAlerts"></div>
+    </div>
 
-// ---------- Init ----------
-renderTodayTab();
-setInterval(renderTodayTab, 60000);
+    <div class="card">
+      <div class="card-title">Today's Adjusted Targets</div>
+      <div class="card-sub">Auto-bumped slightly if yesterday fell short, so you catch up instead of just repeating the miss.</div>
+      <div id="adjustedTargets"></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="bottom-nav">
+  <button class="nav-btn active" data-view="today"><span class="nav-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l9-9 9 9M5 10v10h14V10"/></svg></span>Today</button>
+  <button class="nav-btn" data-view="workout"><span class="nav-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 7v10M18 7v10M2 10v4M22 10v4M6 12h12"/></svg></span>Workout</button>
+  <button class="nav-btn" data-view="diet"><span class="nav-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 3v18M4 3c0 4 4 4 4 8s-4 4-4 4M20 3v18M14 3v7a3 3 0 006 0V3M17 10v11"/></svg></span>Diet</button>
+  <button class="nav-btn" data-view="progress"><span class="nav-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18M7 15l4-5 3 3 5-7"/></svg></span>Progress</button>
+  <button class="nav-btn" data-view="insights"><span class="nav-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19h16M7 15v3M12 10v8M17 5v13"/></svg></span>Dashboard</button>
+</div>
+
+<script src="workout_data.js"></script>
+<script src="diet_data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
