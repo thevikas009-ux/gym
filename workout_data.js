@@ -1,7 +1,11 @@
 // ============================================================
-// WORKOUT_DATA — 4-week rotating Push / Pull / Legs program
+// WORKOUT_DATA — 4-week rotating program
 // Goal: Lean muscle gain + body recomposition
-// Schedule fit: 07:00–08:30 AM gym window (6 day split, PPL x2, 1 rest day)
+// Split: Mon Legs · Tue Push · Wed Pull · Thu Push · Fri Pull · Sat Full Body · Sun Rest
+// The day is picked AUTOMATICALLY from today's real weekday — no manual
+// day selection anywhere in the app. Only the WEEK (1-4) rotates the
+// exact exercises, so the same weekday-type never repeats the same
+// exact workout two weeks running.
 // Images: placehold.co text-cards (always load, zero API keys needed).
 // Swap the `img` field for real Unsplash/Pexels/GIF URLs any time —
 // the layout doesn't care about the source.
@@ -38,6 +42,14 @@ const WORKOUT_DATA = {
       { name: "Walking Lunges", sets: 3, reps: "12/leg", rest: "60s", img: img("Walking Lunges") },
       { name: "Standing Calf Raise", sets: 4, reps: "15-20", rest: "45s", img: img("Calf Raise") },
       { name: "Hanging Knee Raise", sets: 3, reps: "12-15", rest: "45s", img: img("Knee Raise") }
+    ],
+    full: [
+      { name: "Barbell Back Squat", sets: 3, reps: "8-10", rest: "90s", img: img("Squat") },
+      { name: "Flat Barbell Bench Press", sets: 3, reps: "8-10", rest: "90s", img: img("Bench Press") },
+      { name: "Barbell Bent-Over Row", sets: 3, reps: "8-10", rest: "90s", img: img("Bent Over Row") },
+      { name: "Seated Overhead Press", sets: 3, reps: "10-12", rest: "75s", img: img("OHP") },
+      { name: "Romanian Deadlift", sets: 3, reps: "10-12", rest: "90s", img: img("RDL") },
+      { name: "Plank", sets: 3, reps: "45s hold", rest: "45s", img: img("Plank") }
     ]
   },
   2: {
@@ -64,6 +76,14 @@ const WORKOUT_DATA = {
       { name: "Leg Extension", sets: 3, reps: "12-15", rest: "60s", img: img("Leg Extension") },
       { name: "Seated Calf Raise", sets: 4, reps: "15-20", rest: "45s", img: img("Seated Calf Raise") },
       { name: "Cable Crunch", sets: 3, reps: "15", rest: "45s", img: img("Cable Crunch") }
+    ],
+    full: [
+      { name: "Front Squat", sets: 3, reps: "8-10", rest: "90s", img: img("Front Squat") },
+      { name: "Incline Dumbbell Press", sets: 3, reps: "10-12", rest: "75s", img: img("Incline DB Press") },
+      { name: "Lat Pulldown", sets: 3, reps: "10-12", rest: "75s", img: img("Lat Pulldown") },
+      { name: "Push Press", sets: 3, reps: "8-10", rest: "90s", img: img("Push Press") },
+      { name: "Dumbbell RDL", sets: 3, reps: "10-12", rest: "75s", img: img("DB RDL") },
+      { name: "Hanging Leg Raise", sets: 3, reps: "12-15", rest: "45s", img: img("Leg Raise") }
     ]
   },
   3: {
@@ -90,6 +110,14 @@ const WORKOUT_DATA = {
       { name: "Step-Ups", sets: 3, reps: "12/leg", rest: "60s", img: img("Step-Ups") },
       { name: "Donkey Calf Raise", sets: 4, reps: "15-20", rest: "45s", img: img("Donkey Calf Raise") },
       { name: "Russian Twist", sets: 3, reps: "20", rest: "45s", img: img("Russian Twist") }
+    ],
+    full: [
+      { name: "Goblet Squat", sets: 3, reps: "10-12", rest: "75s", img: img("Goblet Squat") },
+      { name: "Flat Dumbbell Press", sets: 3, reps: "10-12", rest: "75s", img: img("Flat DB Press") },
+      { name: "Cable Seated Row", sets: 3, reps: "10-12", rest: "75s", img: img("Cable Row") },
+      { name: "Arnold Press", sets: 3, reps: "10-12", rest: "75s", img: img("Arnold Press") },
+      { name: "Stiff-Leg Deadlift", sets: 3, reps: "10-12", rest: "75s", img: img("Stiff-Leg Deadlift") },
+      { name: "Cable Crunch", sets: 3, reps: "15", rest: "45s", img: img("Cable Crunch") }
     ]
   },
   4: {
@@ -116,10 +144,36 @@ const WORKOUT_DATA = {
       { name: "Reverse Lunges", sets: 3, reps: "12/leg", rest: "60s", img: img("Reverse Lunges") },
       { name: "Single-Leg Calf Raise", sets: 3, reps: "12-15/leg", rest: "45s", img: img("Single-Leg Calf Raise") },
       { name: "Weighted Plank", sets: 3, reps: "45s hold", rest: "45s", img: img("Weighted Plank") }
+    ],
+    full: [
+      { name: "Box Squat", sets: 3, reps: "8-10", rest: "90s", img: img("Box Squat") },
+      { name: "Machine Chest Press", sets: 3, reps: "10-12", rest: "75s", img: img("Machine Chest Press") },
+      { name: "One-Arm Dumbbell Row", sets: 3, reps: "10/side", rest: "75s", img: img("1-Arm DB Row") },
+      { name: "Dumbbell Shoulder Press", sets: 3, reps: "10-12", rest: "75s", img: img("DB Shoulder Press") },
+      { name: "Good Mornings", sets: 3, reps: "10-12", rest: "75s", img: img("Good Mornings") },
+      { name: "Weighted Plank", sets: 3, reps: "45s hold", rest: "45s", img: img("Weighted Plank") }
     ]
   }
 };
 
-// 6-day split cycle used to derive "today's" workout in the app:
-// index 0 = Mon ... 6 = Sun
-const SPLIT_CYCLE = ["push", "pull", "legs", "push", "pull", "legs", "rest"];
+// ------------------------------------------------------------
+// Auto weekday → split-type mapping (no manual day selection).
+// mon=Legs · tue=Push · wed=Pull · thu=Push · fri=Pull · sat=Full Body · sun=Rest
+// ------------------------------------------------------------
+const SPLIT_CYCLE = {
+  mon: "legs",
+  tue: "push",
+  wed: "pull",
+  thu: "push",
+  fri: "pull",
+  sat: "full",
+  sun: "rest"
+};
+
+const SPLIT_FOCUS = {
+  push: "Chest · Shoulders · Triceps",
+  pull: "Back · Biceps · Rear Delts",
+  legs: "Quads · Hamstrings · Glutes · Calves · Core",
+  full: "Full Body — Strength + Conditioning",
+  rest: "Rest & Recovery"
+};
