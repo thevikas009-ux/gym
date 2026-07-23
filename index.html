@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>FORGE — Daily Recomp Tracker</title>
-<link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiRk9SR0UiLCJzaG9ydF9uYW1lIjoiRk9SR0UiLCJzdGFydF91cmwiOiIuIiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJiYWNrZ3JvdW5kX2NvbG9yIjoiIzExMTQxYSIsInRoZW1lX2NvbG9yIjoiIzExMTQxYSJ9">
+<title>YUVA — Daily Recomp Tracker</title>
+<link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiWVVWQSIsInNob3J0X25hbWUiOiJZVVZBIiwic3RhcnRfdXJsIjoiLiIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiMxMTE0MWEiLCJ0aGVtZV9jb2xvciI6IiMxMTE0MWEifQ==">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -18,6 +18,7 @@
     --gold-dim:#b98a2f;
     --coral:#ff7a59;
     --mint:#5fd6a8;
+    --red:#ff6b6b;
     --text:#eef0f2;
     --text-dim:#9aa1b0;
     --text-faint:#6b7280;
@@ -41,7 +42,6 @@
   .mono{font-family:var(--font-mono);}
   .container{max-width:560px; margin:0 auto; padding: 18px 16px 8px;}
 
-  /* Header */
   .topbar{
     position:sticky; top:0; z-index:20;
     background:linear-gradient(180deg, rgba(17,20,26,0.98), rgba(17,20,26,0.9));
@@ -63,7 +63,6 @@
     background:var(--surface); border:1px solid var(--line); padding:6px 10px; border-radius:20px;
   }
 
-  /* Cards */
   .card{
     background:var(--surface);
     border:1px solid var(--line);
@@ -74,7 +73,6 @@
   .card-title{font-size:13px; text-transform:uppercase; letter-spacing:1.5px; color:var(--gold); margin-bottom:10px; font-weight:600;}
   .card-sub{color:var(--text-dim); font-size:13px; margin-top:-6px; margin-bottom:12px;}
 
-  /* Timeline (dashboard signature element) */
   .timeline{position:relative; margin-left:6px; padding-left:22px; border-left:2px solid var(--line);}
   .tl-item{position:relative; padding-bottom:20px;}
   .tl-item:last-child{padding-bottom:2px;}
@@ -88,7 +86,6 @@
   .tl-label{font-size:14.5px; margin-top:2px;}
   .tl-meta{font-size:12px; color:var(--text-dim); margin-top:1px;}
 
-  /* Tabs / bottom nav */
   .bottom-nav{
     position:fixed; bottom:0; left:0; right:0; z-index:30;
     background:rgba(24,28,36,0.97); backdrop-filter:blur(8px);
@@ -110,7 +107,6 @@
   .view.active{display:block; animation: fadein .25s ease;}
   @keyframes fadein{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);}}
 
-  /* Buttons / chips */
   .row{display:flex; gap:8px; flex-wrap:wrap;}
   .chip{
     border:1px solid var(--line); background:var(--surface-2); color:var(--text-dim);
@@ -124,10 +120,17 @@
   }
   .btn.ghost{background:transparent; border:1px solid var(--line); color:var(--text);}
   .btn.coral{background:var(--coral);}
+  .btn.small{padding:8px 12px; font-size:12.5px;}
   .btn.block{width:100%;}
   .btn:disabled{opacity:.5;}
 
-  /* Exercise cards */
+  .split-badge{
+    display:inline-flex; align-items:center; gap:8px;
+    background:linear-gradient(135deg, rgba(232,169,59,0.15), rgba(255,122,89,0.1));
+    border:1px solid var(--gold-dim); border-radius:12px; padding:10px 14px; margin-bottom:6px;
+  }
+  .split-badge .big{font-family:var(--font-display); font-size:20px; color:var(--gold);}
+
   .ex-card{display:flex; gap:12px; background:var(--surface-2); border:1px solid var(--line); border-radius:12px; padding:10px; margin-bottom:10px;}
   .ex-img{width:78px; height:78px; border-radius:9px; object-fit:cover; flex-shrink:0; background:#111;}
   .ex-body{flex:1; min-width:0;}
@@ -141,7 +144,6 @@
   }
   .check.on{background:var(--mint); border-color:var(--mint); color:#0c1a14; font-weight:900;}
 
-  /* Meal cards */
   .meal-card{background:var(--surface-2); border:1px solid var(--line); border-radius:12px; padding:12px; margin-bottom:10px;}
   .meal-head{display:flex; justify-content:space-between; align-items:flex-start; gap:8px;}
   .meal-time{font-family:var(--font-mono); font-size:11.5px; color:var(--gold); font-weight:600;}
@@ -151,11 +153,30 @@
   .tag.veg{background:rgba(95,214,168,0.15); color:var(--mint);}
   .tag.nonveg{background:rgba(255,122,89,0.15); color:var(--coral);}
 
-  /* Stat blocks */
+  .log-box{margin-top:12px; padding-top:10px; border-top:1px dashed var(--line);}
+  .log-box-title{font-size:11px; text-transform:uppercase; letter-spacing:0.7px; color:var(--text-dim); margin-bottom:8px; font-weight:700;}
+  .log-form{display:flex; gap:6px; margin-bottom:8px;}
+  select, .log-form input[type=number]{
+    background:var(--ink-2); border:1px solid var(--line); color:var(--text); padding:8px 8px;
+    border-radius:8px; font-family:var(--font-body); font-size:12.5px;
+  }
+  select{flex:2; min-width:0;}
+  .log-form input[type=number]{flex:0 0 54px; font-family:var(--font-mono);}
+  .logged-item{display:flex; justify-content:space-between; align-items:center; background:var(--ink-2); border-radius:8px; padding:7px 10px; margin-bottom:6px; font-size:12.5px;}
+  .logged-item .macros{color:var(--text-dim); font-family:var(--font-mono); font-size:11px;}
+  .remove-x{background:none; border:none; color:var(--red); font-size:16px; cursor:pointer; padding:0 4px;}
+
   .stat-grid{display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;}
+  .stat-grid.four{grid-template-columns:1fr 1fr 1fr 1fr;}
   .stat-box{background:var(--surface-2); border:1px solid var(--line); border-radius:10px; padding:10px; text-align:center;}
   .stat-num{font-family:var(--font-mono); font-size:19px; font-weight:600; color:var(--gold);}
   .stat-lbl{font-size:10px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.6px; margin-top:2px;}
+
+  .bar-track{background:var(--ink-2); border-radius:8px; height:8px; overflow:hidden; margin-top:6px;}
+  .bar-fill{height:100%; background:linear-gradient(90deg, var(--gold), var(--coral)); border-radius:8px;}
+  .target-row{margin-bottom:10px;}
+  .target-row .tr-head{display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:3px;}
+  .target-row .tr-head b{font-family:var(--font-mono); color:var(--text);}
 
   input[type=number], input[type=text], input[type=date]{
     background:var(--ink-2); border:1px solid var(--line); color:var(--text); padding:10px 12px;
@@ -179,6 +200,11 @@
     font-weight:700; font-size:13px; z-index:50; opacity:0; pointer-events:none; transition:opacity .2s ease;
   }
   .toast.show{opacity:1;}
+
+  .alert{border-radius:10px; padding:10px 12px; margin-bottom:8px; font-size:13px; line-height:1.5; display:flex; gap:8px;}
+  .alert.warn{background:rgba(255,122,89,0.1); border:1px solid rgba(255,122,89,0.35); color:#ffb59f;}
+  .alert.ok{background:rgba(95,214,168,0.1); border:1px solid rgba(95,214,168,0.35); color:var(--mint);}
+  .alert.tip{background:rgba(232,169,59,0.1); border:1px solid rgba(232,169,59,0.35); color:var(--gold);}
 </style>
 </head>
 <body>
@@ -186,10 +212,10 @@
 <div class="topbar">
   <div class="topbar-inner">
     <div class="brand">
-      <div class="brand-mark">F</div>
+      <div class="brand-mark">Y</div>
       <div>
-        <div class="brand-title">FORGE</div>
-        <div class="brand-sub">Recomp Tracker</div>
+        <div class="brand-title">YUVA</div>
+        <div class="brand-sub">Daily Recomp Tracker</div>
       </div>
     </div>
     <div class="date-pill mono" id="headerDate">--</div>
@@ -198,8 +224,8 @@
 
 <div class="container">
 
-  <!-- DASHBOARD -->
-  <div class="view active" id="view-dashboard">
+  <!-- TODAY -->
+  <div class="view active" id="view-today">
     <div class="card">
       <div class="card-title">Today's Line</div>
       <div class="card-sub" id="dashSub">Week — · Day type —</div>
@@ -217,7 +243,7 @@
 
     <div class="card">
       <div class="card-title">Program Week</div>
-      <div class="card-sub">Set the date you started Week 1 — the app auto-rotates weeks 1→4 and repeats.</div>
+      <div class="card-sub">Set the date you started Week 1 — the app auto-rotates weeks 1→4 and repeats. The day (Legs/Push/Pull/Full/Rest) is always picked automatically from today's weekday.</div>
       <div class="field">
         <label>Program Start Date</label>
         <input type="date" id="startDate">
@@ -229,21 +255,31 @@
   <!-- WORKOUT -->
   <div class="view" id="view-workout">
     <div class="card">
-      <div class="card-title">Week</div>
-      <div class="row" id="weekSelectRow"></div>
+      <div class="split-badge">
+        <span class="big" id="todaySplitBig">--</span>
+      </div>
+      <div class="card-sub" id="dayFocusNote" style="margin:6px 0 0;"></div>
     </div>
     <div class="card">
-      <div class="card-title">Day</div>
-      <div class="row" id="daySelectRow"></div>
-      <div class="card-sub" id="dayFocusNote" style="margin-top:10px;"></div>
+      <div class="card-title">Preview Week (exercises rotate every week)</div>
+      <div class="row" id="weekSelectRow"></div>
     </div>
     <div id="exerciseList"></div>
   </div>
 
   <!-- DIET -->
   <div class="view" id="view-diet">
-    <div class="note">Target for 76 kg recomp: ~2250–2400 kcal · 150–160g protein · 35g+ fiber. Swap Veg ⇄ Non-Veg freely — macros stay close either way.</div>
+    <div class="card">
+      <div class="card-title">Today's Intake</div>
+      <div id="intakeTargets"></div>
+    </div>
+    <div class="note">Target for 76 kg recomp: ~2250–2400 kcal · 150–160g protein · 35g+ fiber. Swap Veg ⇄ Non-Veg freely — macros stay close either way. Log what you actually ate under each meal to auto-track your numbers.</div>
     <div id="mealList"></div>
+    <div class="card">
+      <div class="card-title">This Week's Nutrition Trend</div>
+      <div class="card-sub">Protein (g) logged per day, last 7 days</div>
+      <svg id="nutritionChart" viewBox="0 0 500 160" style="width:100%; height:auto;"></svg>
+    </div>
   </div>
 
   <!-- PROGRESS -->
@@ -255,13 +291,18 @@
         <input type="number" id="inputWeight" step="0.1" placeholder="76.0">
       </div>
       <div class="field">
+        <label>Weighed In</label>
+        <div class="row" id="weighTimingRow"></div>
+      </div>
+      <div class="field">
         <label>Water Intake</label>
         <div class="row" id="waterRow" style="align-items:center;">
           <button class="btn ghost" id="waterMinus" style="padding:8px 14px;">−</button>
           <div class="mono" style="font-size:18px; min-width:60px; text-align:center;" id="waterCount">0 / 8</div>
           <button class="btn ghost" id="waterPlus" style="padding:8px 14px;">+</button>
-          <span style="font-size:12px; color:var(--text-dim);">glasses</span>
+          <span style="font-size:12px; color:var(--text-dim);" id="waterLiters">0.00 L</span>
         </div>
+        <div class="card-sub" style="margin-top:6px; margin-bottom:0;">Assumes 1 glass ≈ 250ml — match it to your bottle if it's a different size.</div>
       </div>
       <button class="btn block" id="saveProgress">Save Today's Log</button>
     </div>
@@ -277,17 +318,27 @@
     </div>
   </div>
 
-  <!-- REMINDERS -->
-  <div class="view" id="view-reminders">
+  <!-- DASHBOARD / INSIGHTS -->
+  <div class="view" id="view-insights">
     <div class="card">
-      <div class="card-title">In-App Reminders</div>
-      <div class="card-sub">Works while this page is open (or installed to your home screen) in Chrome on Android. iOS Safari limits background alerts — see WhatsApp option below for a phone-native fix.</div>
-      <button class="btn block" id="enableNotif">Enable Browser Notifications</button>
-      <div id="notifStatus" class="card-sub" style="margin-top:8px;"></div>
+      <div class="card-title">Lean Progress</div>
+      <div class="stat-grid four" id="leanStats"></div>
     </div>
+
     <div class="card">
-      <div class="card-title">WhatsApp / SMS Reminders (Recommended)</div>
-      <div class="card-sub">Free, works even when your phone is locked or this app is closed. Full script + setup steps are in the section below the app, and in the <code>reminder_bot.py</code> file provided alongside this app.</div>
+      <div class="card-title">This Week's Adherence</div>
+      <div id="adherenceBars"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Yesterday's Review</div>
+      <div id="yesterdayAlerts"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Today's Adjusted Targets</div>
+      <div class="card-sub">Auto-bumped slightly if yesterday fell short, so you catch up instead of just repeating the miss.</div>
+      <div id="adjustedTargets"></div>
     </div>
   </div>
 
@@ -296,11 +347,11 @@
 <div class="toast" id="toast"></div>
 
 <div class="bottom-nav">
-  <button class="nav-btn active" data-view="dashboard"><span class="nav-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l9-9 9 9M5 10v10h14V10"/></svg></span>Today</button>
+  <button class="nav-btn active" data-view="today"><span class="nav-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l9-9 9 9M5 10v10h14V10"/></svg></span>Today</button>
   <button class="nav-btn" data-view="workout"><span class="nav-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 7v10M18 7v10M2 10v4M22 10v4M6 12h12"/></svg></span>Workout</button>
   <button class="nav-btn" data-view="diet"><span class="nav-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 3v18M4 3c0 4 4 4 4 8s-4 4-4 4M20 3v18M14 3v7a3 3 0 006 0V3M17 10v11"/></svg></span>Diet</button>
   <button class="nav-btn" data-view="progress"><span class="nav-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18M7 15l4-5 3 3 5-7"/></svg></span>Progress</button>
-  <button class="nav-btn" data-view="reminders"><span class="nav-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 01-3.4 0"/></svg></span>Remind</button>
+  <button class="nav-btn" data-view="insights"><span class="nav-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19h16M7 15v3M12 10v8M17 5v13"/></svg></span>Dashboard</button>
 </div>
 
 <script src="workout_data.js"></script>
