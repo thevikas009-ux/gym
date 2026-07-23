@@ -7,7 +7,8 @@
 const LS = {
   startDate: "yuva_start_date",
   logs: "yuva_daily_logs",       // { "2026-07-19": { weight, weighTiming, water, checks:{}, foodLog:{} } }
-  selWeek: "yuva_sel_week"
+  selWeek: "yuva_sel_week",
+  selDate: "yuva_workout_sel_date"
 };
 
 const GLASS_ML = 250; // assumption for water → litre conversion
@@ -29,7 +30,16 @@ const SCHEDULE = [
 const WEEKDAY_KEYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
 
 function todayKey(d = new Date()) {
-  return d.toISOString().slice(0, 10);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+// Parses a "YYYY-MM-DD" key back into a local-midnight Date (avoids the
+// UTC-parsing shift that plain `new Date("YYYY-MM-DD")` causes).
+function parseDateKey(key) {
+  const [y, m, d] = key.split("-").map(Number);
+  return new Date(y, m - 1, d);
 }
 
 function getLogs() {
@@ -44,16 +54,24 @@ function ensureEntry(logs, key) {
   if (!logs[key].foodLog) logs[key].foodLog = {};
   return logs[key];
 }
-function getTodayLog() {
+function getEntryForDate(dateStr) {
   const logs = getLogs();
-  const k = todayKey();
-  const entry = ensureEntry(logs, k);
-  return { logs, key: k, entry };
+  const entry = ensureEntry(logs, dateStr);
+  return { logs, key: dateStr, entry };
+}
+function getTodayLog() {
+  return getEntryForDate(todayKey());
 }
 function getLogFor(dateObj) {
   const logs = getLogs();
   const k = todayKey(dateObj);
   return logs[k] || null;
+}
+function getWorkoutSelDate() {
+  return localStorage.getItem(LS.selDate) || todayKey();
+}
+function setWorkoutSelDate(dateStr) {
+  localStorage.setItem(LS.selDate, dateStr);
 }
 
 function getStartDate() {
@@ -66,8 +84,9 @@ function getStartDate() {
 }
 
 function weekNumberForDate(d) {
-  const start = new Date(getStartDate());
-  const diffDays = Math.floor((new Date(todayKey(d)) - start) / 86400000);
+  const start = parseDateKey(getStartDate());
+  const target = parseDateKey(todayKey(d));
+  const diffDays = Math.floor((target - start) / 86400000);
   const weekIdx = Math.floor(diffDays / 7) % 4;
   return weekIdx < 0 ? ((weekIdx % 4) + 4) % 4 + 1 : weekIdx + 1;
 }
@@ -179,26 +198,40 @@ document.getElementById("startDate").addEventListener("change", (e) => {
   renderTodayTab();
 });
 
-// ---------- Workout tab (day auto-selected, only week is previewable) ----------
+// ---------- Workout tab ----------
+// The day/split is always auto-derived from whichever DATE is selected
+// (defaults to today). Use the date picker or quick-date chips to jump to
+// any past day — e.g. to backfill workouts you did but didn't tick off —
+// and tick/untick exercises for that exact date. The Week chips below are
+// a separate, purely optional "preview other weeks' exercise variations"
+// tool and only affect what's shown, not what's saved, unless the
+// previewed week happens to match the selected date's real program week.
 function renderWorkoutTab() {
-  const currentWeek = currentWeekNumber();
+  const selDateStr = getWorkoutSelDate();
+  document.getElementById("workoutDate").value = selDateStr;
+  renderQuickDateChips(selDateStr);
+
+  const selDate = parseDateKey(selDateStr);
+  const currentWeek = weekNumberForDate(selDate);
   const previewWeek = parseInt(localStorage.getItem(LS.selWeek)) || currentWeek;
   const isPreview = previewWeek !== currentWeek;
-  const split = todaySplitType();
+  const split = splitTypeForDate(selDate);
+  const isToday = selDateStr === todayKey();
 
-  const now = new Date();
-  const dayName = now.toLocaleDateString(undefined, { weekday: "long" });
+  const dayName = selDate.toLocaleDateString(undefined, { weekday: "long" });
+  const dateLabel = selDate.toLocaleDateString(undefined, { day: "2-digit", month: "short" });
   const splitLabel = split === "rest" ? "REST DAY" : split === "full" ? "FULL BODY DAY" : split.toUpperCase() + " DAY";
-  document.getElementById("todaySplitBig").textContent = `${dayName.toUpperCase()} · ${splitLabel}`;
+  document.getElementById("todaySplitBig").textContent =
+    `${isToday ? "TODAY" : dayName.toUpperCase()} ${dateLabel} · ${splitLabel}`;
   document.getElementById("dayFocusNote").textContent =
-    (isPreview ? `Previewing Week ${previewWeek} exercises. ` : "") + SPLIT_FOCUS[split];
+    (isPreview ? `Previewing Week ${previewWeek} exercises (won't be saved unless it matches ${dateLabel}'s actual Week ${currentWeek}). ` : "") + SPLIT_FOCUS[split];
 
   const weekRow = document.getElementById("weekSelectRow");
   weekRow.innerHTML = "";
   [1, 2, 3, 4].forEach(w => {
     const chip = document.createElement("button");
     chip.className = "chip" + (w === previewWeek ? " active" : "");
-    chip.textContent = "Week " + w + (w === currentWeek ? " (this week)" : "");
+    chip.textContent = "Week " + w + (w === currentWeek ? " (matches this date)" : "");
     chip.onclick = () => { localStorage.setItem(LS.selWeek, w); renderWorkoutTab(); };
     weekRow.appendChild(chip);
   });
@@ -207,12 +240,12 @@ function renderWorkoutTab() {
   list.innerHTML = "";
 
   if (split === "rest") {
-    list.innerHTML = `<div class="card"><div class="card-title">Rest &amp; Recovery</div><div class="card-sub" style="margin-bottom:0;">No lifting today. Light walk, stretching, or mobility work is great here — let the muscle rebuild.</div></div>`;
+    list.innerHTML = `<div class="card"><div class="card-title">Rest &amp; Recovery</div><div class="card-sub" style="margin-bottom:0;">No lifting on ${dateLabel}. Light walk, stretching, or mobility work is great here — let the muscle rebuild.</div></div>`;
     return;
   }
 
   const exercises = WORKOUT_DATA[previewWeek][split];
-  const { entry } = getTodayLog();
+  const { entry } = getEntryForDate(selDateStr);
 
   exercises.forEach((ex, i) => {
     const checkId = `w${previewWeek}_${split}_${i}`;
@@ -241,7 +274,7 @@ function renderWorkoutTab() {
 
   list.querySelectorAll(".check").forEach(btn => {
     btn.addEventListener("click", () => {
-      const { logs, key, entry } = getTodayLog();
+      const { logs, key, entry } = getEntryForDate(selDateStr);
       const id = btn.dataset.id;
       entry.checks[id] = !entry.checks[id];
       logs[key] = entry;
@@ -251,6 +284,33 @@ function renderWorkoutTab() {
     });
   });
 }
+
+function renderQuickDateChips(selDateStr) {
+  const row = document.getElementById("quickDateRow");
+  if (!row) return;
+  row.innerHTML = "";
+  const start = parseDateKey(getStartDate());
+  const today = parseDateKey(todayKey());
+  let days = [];
+  for (let d = new Date(start); d <= today; d.setDate(d.getDate() + 1)) {
+    days.push(todayKey(d));
+  }
+  if (days.length > 14) days = days.slice(-14); // keep the chip row from overflowing
+  days.forEach(k => {
+    const d = parseDateKey(k);
+    const chip = document.createElement("button");
+    chip.className = "chip" + (k === selDateStr ? " active" : "");
+    chip.textContent = (k === todayKey() ? "Today" : d.toLocaleDateString(undefined, { weekday: "short", day: "numeric" }));
+    chip.onclick = () => { setWorkoutSelDate(k); renderWorkoutTab(); };
+    row.appendChild(chip);
+  });
+}
+
+document.getElementById("workoutDate").addEventListener("change", (e) => {
+  if (!e.target.value) return;
+  setWorkoutSelDate(e.target.value);
+  renderWorkoutTab();
+});
 
 // ---------- Diet tab ----------
 function computeDayMacros(entry) {
