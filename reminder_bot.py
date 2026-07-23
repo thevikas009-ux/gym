@@ -1,5 +1,5 @@
 """
-FORGE Reminder Bot
+YUVA Reminder Bot
 -------------------
 Sends WhatsApp (or SMS) reminders on your daily schedule using Twilio's
 free WhatsApp Sandbox. Works even if your phone is locked or the web
@@ -47,9 +47,9 @@ REMINDERS = [
     ("08:40", "🍳 Post-workout breakfast time — high protein, don't skip this window."),
     ("12:55", "🍽️ Lunch coming up at 1:00–1:30 PM — high protein + fiber, keep it clean."),
     ("16:25", "🥜 Evening snack time — roasted chana / boiled eggs, not vending machine carbs."),
-    ("19:15", "🏠 Almost home — plan dinner: protein + veggies, light on carbs."),
-    ("19:30", "🍛 Dinner reminder — grilled protein + sabzi. Log it in FORGE once done."),
-    ("21:30", "📊 Don't forget to log today's weight & water in the FORGE app."),
+    ("19:15", "🏠 Almost home (7:15-7:30 window) — plan dinner: protein + veggies, light on carbs."),
+    ("21:00", "🍛 Dinner window closes by 9:30 PM — grilled protein + sabzi. Log it in YUVA once done."),
+    ("21:30", "📊 Don't forget to log today's weight & water in the YUVA app."),
 ]
 
 
@@ -72,7 +72,7 @@ def schedule_all():
 
 if __name__ == "__main__":
     schedule_all()
-    print("FORGE reminder bot running. Press Ctrl+C to stop.")
+    print("YUVA reminder bot running. Press Ctrl+C to stop.")
     while True:
         schedule.run_pending()
         time.sleep(30)
