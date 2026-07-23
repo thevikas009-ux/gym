@@ -1,5 +1,5 @@
 // ============================================================
-// YUVA — Fully Synced Multi-Date App Logic (Diet + Progress + Workout)
+// YUVA — Fully Synced Multi-Date App Logic
 // ============================================================
 
 const LS = {
@@ -133,6 +133,25 @@ function refreshAllActiveViews() {
   renderDietTab();
   renderProgressTab();
   renderInsightsTab();
+}
+
+function foodOptionsHtml() {
+  const groups = {};
+  FOOD_DB.forEach(f => {
+    const gName = f.group || "Other Items";
+    if (!groups[gName]) groups[gName] = [];
+    groups[gName].push(f);
+  });
+
+  let html = "";
+  for (const groupName in groups) {
+    html += `<optgroup label="--- ${groupName.toUpperCase()} ---">`;
+    groups[groupName].forEach(f => {
+      html += `<option value="${f.id}">${f.name}</option>`;
+    });
+    html += `</optgroup>`;
+  }
+  return html;
 }
 
 // ---------- Navigation ----------
@@ -360,7 +379,7 @@ document.getElementById("workoutDate")?.addEventListener("change", (e) => {
   renderWorkoutTab();
 });
 
-// ---------- Diet tab (Multi-Date Backfill Supported) ----------
+// ---------- Diet tab ----------
 function computeDayMacros(entry) {
   const totals = { calories: 0, protein: 0, carbs: 0, fiber: 0 };
   if (!entry || !entry.foodLog) return totals;
@@ -396,10 +415,6 @@ function renderIntakeTargets(totals) {
       </div>
     `;
   }).join("");
-}
-
-function foodOptionsHtml() {
-  return FOOD_DB.map(f => `<option value="${f.id}">${f.name} (${f.unit})</option>`).join("");
 }
 
 function renderDietTab() {
@@ -452,10 +467,16 @@ function renderDietTab() {
       <div class="log-box">
         <div class="log-box-title">What did you eat on ${selDateStr === todayKey() ? 'Today' : selDateStr}?</div>
         <div id="loggedList_${i}">${loggedHtml || `<div class="card-sub" style="margin:0 0 6px;">Nothing logged yet.</div>`}</div>
-        <div class="log-form">
-          <select id="foodSelect_${i}">${foodOptionsHtml()}</select>
-          <input type="number" id="foodQty_${i}" value="1" min="0.5" step="0.5">
-          <button class="btn small" data-add-meal="${i}">Add</button>
+        <div class="log-form" style="display:flex; gap:6px; align-items:center;">
+          <div style="flex:3;">
+            <select id="foodSelect_${i}" style="width:100%;">${foodOptionsHtml()}</select>
+          </div>
+          <div style="flex:1; min-width:60px;">
+            <input type="number" id="foodQty_${i}" value="1" min="0.5" step="0.5" style="width:100%;">
+          </div>
+          <div style="flex:0 0 auto;">
+            <button class="btn small" data-add-meal="${i}">Add</button>
+          </div>
         </div>
       </div>
     `;
@@ -482,7 +503,7 @@ function renderDietTab() {
       entry.foodLog[mealIdx].push({ foodId, qty });
       logs[key] = entry;
       saveLogs(logs);
-      showToast(`Food logged for ${selDateStr} ✓`);
+      showToast(`Food logged ✓`);
     });
   });
 
@@ -567,7 +588,7 @@ function renderNutritionChart() {
   svg.innerHTML = bars;
 }
 
-// ---------- Progress tab (Weight & Water Backfill) ----------
+// ---------- Progress tab ----------
 function renderProgressTab() {
   const selDateStr = getProgressSelDate();
   
