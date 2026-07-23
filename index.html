@@ -84,7 +84,6 @@
   .tl-item.done .tl-dot{background:var(--mint); border-color:var(--mint);}
   .tl-time{font-family:var(--font-mono); font-size:12px; color:var(--gold); font-weight:600;}
   .tl-label{font-size:14.5px; margin-top:2px;}
-  .tl-meta{font-size:12px; color:var(--text-dim); margin-top:1px;}
 
   .bottom-nav{
     position:fixed; bottom:0; left:0; right:0; z-index:30;
@@ -119,10 +118,8 @@
     font-weight:700; font-size:14px; cursor:pointer; font-family:var(--font-body);
   }
   .btn.ghost{background:transparent; border:1px solid var(--line); color:var(--text);}
-  .btn.coral{background:var(--coral);}
   .btn.small{padding:8px 12px; font-size:12.5px;}
   .btn.block{width:100%;}
-  .btn:disabled{opacity:.5;}
 
   .split-badge{
     display:inline-flex; align-items:center; gap:8px;
@@ -192,8 +189,6 @@
 
   .empty{color:var(--text-faint); font-size:13px; text-align:center; padding:20px 0;}
   .note{font-size:12.5px; color:var(--text-dim); line-height:1.6; background:rgba(232,169,59,0.06); border:1px dashed var(--gold-dim); padding:10px 12px; border-radius:10px; margin-bottom:12px;}
-  code{background:var(--ink-2); padding:2px 6px; border-radius:5px; font-size:12px;}
-  .divider{height:1px; background:var(--line); margin:14px 0;}
   .toast{
     position:fixed; bottom:96px; left:50%; transform:translateX(-50%);
     background:var(--mint); color:#0c1a14; padding:9px 18px; border-radius:20px;
@@ -243,7 +238,7 @@
 
     <div class="card">
       <div class="card-title">Program Week</div>
-      <div class="card-sub">Set the date you started Week 1 — the app auto-rotates weeks 1→4 and repeats. The day (Legs/Push/Pull/Full/Rest) is always picked automatically from today's weekday.</div>
+      <div class="card-sub">Set your Week 1 start date. Auto-rotates weeks 1→4.</div>
       <div class="field">
         <label>Program Start Date</label>
         <input type="date" id="startDate">
@@ -255,8 +250,8 @@
   <!-- WORKOUT -->
   <div class="view" id="view-workout">
     <div class="card">
-      <div class="card-title">Editing Day</div>
-      <div class="card-sub">Pick any date to log or backfill — great for ticking off days you already did but didn't mark at the time.</div>
+      <div class="card-title">Editing Workout Day</div>
+      <div class="card-sub">Select date to view/edit workouts (Monday, Tuesday, etc.)</div>
       <div class="field">
         <label>Date</label>
         <input type="date" id="workoutDate">
@@ -270,7 +265,7 @@
       <div class="card-sub" id="dayFocusNote" style="margin:6px 0 0;"></div>
     </div>
     <div class="card">
-      <div class="card-title">Preview Week (exercises rotate every week)</div>
+      <div class="card-title">Preview Week Exercises</div>
       <div class="row" id="weekSelectRow"></div>
     </div>
     <div id="exerciseList"></div>
@@ -282,11 +277,11 @@
       <div class="card-title">Today's Intake</div>
       <div id="intakeTargets"></div>
     </div>
-    <div class="note">Target for 76 kg recomp: ~2250–2400 kcal · 150–160g protein · 35g+ fiber. Swap Veg ⇄ Non-Veg freely — macros stay close either way. Log what you actually ate under each meal to auto-track your numbers.</div>
+    <div class="note">Target: ~2250–2400 kcal · 150–160g protein · 35g+ fiber.</div>
     <div id="mealList"></div>
     <div class="card">
       <div class="card-title">This Week's Nutrition Trend</div>
-      <div class="card-sub">Protein (g) logged per day, last 7 days</div>
+      <div class="card-sub">Protein (g) logged per day</div>
       <svg id="nutritionChart" viewBox="0 0 500 160" style="width:100%; height:auto;"></svg>
     </div>
   </div>
@@ -294,7 +289,14 @@
   <!-- PROGRESS -->
   <div class="view" id="view-progress">
     <div class="card">
-      <div class="card-title">Log Today</div>
+      <div class="card-title">Editing Progress Log</div>
+      <div class="card-sub">Select date to enter Weight & Water for Monday, Tuesday, etc.</div>
+      <div class="field">
+        <label>Select Date to Feed Data</label>
+        <input type="date" id="progressLogDate">
+      </div>
+      <div class="row" id="progressQuickDateRow" style="margin-bottom:12px;"></div>
+
       <div class="field">
         <label>Body Weight (kg)</label>
         <input type="number" id="inputWeight" step="0.1" placeholder="76.0">
@@ -311,9 +313,8 @@
           <button class="btn ghost" id="waterPlus" style="padding:8px 14px;">+</button>
           <span style="font-size:12px; color:var(--text-dim);" id="waterLiters">0.00 L</span>
         </div>
-        <div class="card-sub" style="margin-top:6px; margin-bottom:0;">Assumes 1 glass ≈ 250ml — match it to your bottle if it's a different size.</div>
       </div>
-      <button class="btn block" id="saveProgress">Save Today's Log</button>
+      <button class="btn block" id="saveProgress">Save Log For Selected Date</button>
     </div>
 
     <div class="card">
@@ -335,7 +336,7 @@
     </div>
 
     <div class="card">
-      <div class="card-title">This Week's Adherence</div>
+      <div class="card-title">This Week's Adherence (Live)</div>
       <div id="adherenceBars"></div>
     </div>
 
@@ -346,7 +347,6 @@
 
     <div class="card">
       <div class="card-title">Today's Adjusted Targets</div>
-      <div class="card-sub">Auto-bumped slightly if yesterday fell short, so you catch up instead of just repeating the miss.</div>
       <div id="adjustedTargets"></div>
     </div>
   </div>
