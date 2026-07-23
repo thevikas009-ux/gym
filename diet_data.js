@@ -15,7 +15,7 @@ const FOOD_DB = [
   { id: "banana_small", group: "Fruits", name: "Banana / Kela (Small ~70g)", cal: 62, protein: 0.8, carbs: 16, fiber: 1.8, unit: "banana" },
   { id: "apple_1med", group: "Fruits", name: "Apple / Seb (1 Medium)", cal: 95, protein: 0.5, carbs: 25, fiber: 4.4, unit: "apple" },
 
-  // --- SOUPS & LIGHT STARTERS ---
+  // --- SOUPS & STARTERS ---
   { id: "veg_soup_1bowl", group: "Soups & Starters", name: "Mixed Veg Soup (1 Bowl ~250ml)", cal: 65, protein: 2, carbs: 10, fiber: 3, unit: "bowl" },
   { id: "chicken_soup_1bowl", group: "Soups & Starters", name: "Clear Chicken Soup (1 Bowl)", cal: 110, protein: 12, carbs: 4, fiber: 1, unit: "bowl" },
 
@@ -28,6 +28,7 @@ const FOOD_DB = [
   { id: "milk_250ml", group: "Beverages & Tea/Coffee", name: "Toned Milk (250ml)", cal: 150, protein: 8, carbs: 12, fiber: 0, unit: "glass" },
 
   // --- BREAKFAST & SNACKS ---
+  { id: "boiled_corn_1cup", group: "Breakfast & Snacks", name: "Boiled Sweet Corn (1 Cup / 150g)", cal: 140, protein: 5, carbs: 28, fiber: 4, unit: "cup" },
   { id: "poha_1plate", group: "Breakfast & Snacks", name: "Poha (1 Medium Plate)", cal: 220, protein: 4, carbs: 40, fiber: 3, unit: "plate" },
   { id: "upma_1plate", group: "Breakfast & Snacks", name: "Upma (1 Medium Plate)", cal: 210, protein: 5, carbs: 36, fiber: 3, unit: "plate" },
   { id: "brown_bread_slice", group: "Breakfast & Snacks", name: "Brown Bread (1 Slice)", cal: 75, protein: 3, carbs: 13, fiber: 2, unit: "slice" },
@@ -39,6 +40,7 @@ const FOOD_DB = [
   { id: "almonds_10", group: "Breakfast & Snacks", name: "Almonds (10 pcs)", cal: 70, protein: 2.5, carbs: 2.5, fiber: 1.5, unit: "handful" },
 
   // --- MAIN MEALS (LUNCH / DINNER) ---
+  { id: "masala_rice_1bowl", group: "Main Meals", name: "Masala Rice / Pulao (1 Bowl)", cal: 210, protein: 4.5, carbs: 42, fiber: 2.5, unit: "bowl" },
   { id: "roti_1", group: "Main Meals", name: "Wheat Roti / Chapati (1 pc)", cal: 85, protein: 3, carbs: 15, fiber: 2, unit: "roti" },
   { id: "dal_1bowl", group: "Main Meals", name: "Cooked Dal (Yellow/Makhani - 1 Bowl)", cal: 150, protein: 8, carbs: 20, fiber: 5, unit: "bowl" },
   { id: "rice_1bowl", group: "Main Meals", name: "Cooked White/Brown Rice (1 Bowl)", cal: 160, protein: 3.5, carbs: 35, fiber: 1, unit: "bowl" },
@@ -70,7 +72,7 @@ const DIET_DATA = [
     title: "Post-Workout Breakfast",
     macroNote: "Target: 30g+ Protein + Fiber",
     options: [
-      { tag: "veg", text: "1 Plate Poha / Upma + 1 Scoop Whey + 1 Banana" },
+      { tag: "veg", text: "1 Bowl Boiled Corn / Poha / Upma + 1 Scoop Whey" },
       { tag: "nonveg", text: "3 Whole Eggs + 2 Brown Bread Slices + 1 Banana" }
     ]
   },
@@ -80,8 +82,8 @@ const DIET_DATA = [
     title: "High-Protein Lunch",
     macroNote: "Target: 40g Protein + Clean Carbs",
     options: [
-      { tag: "veg", text: "2 Roti + 1 Bowl Dal + 50g Soya Chunks Sabzi + Curd + Salad" },
-      { tag: "nonveg", text: "2 Roti / Rice + 150g Chicken Curry + Dal + Salad" }
+      { tag: "veg", text: "1 Bowl Masala Rice / 2 Roti + Dal + Soya Chunks + Curd + Salad" },
+      { tag: "nonveg", text: "1 Bowl Masala Rice / 2 Roti + 150g Chicken Curry + Salad" }
     ]
   },
   {
@@ -90,7 +92,7 @@ const DIET_DATA = [
     title: "Workday Refuel",
     macroNote: "Target: Satiety & Sustained Energy",
     options: [
-      { tag: "veg", text: "1 Cup Milk Tea (Low Sugar / Jaggery) + 1 Banana / Sprouts" },
+      { tag: "veg", text: "1 Cup Boiled Corn / Sprouts + Milk Tea (Low Sugar)" },
       { tag: "veg", text: "1 Scoop Whey + 1 Banana + 10 Almonds" }
     ]
   },
