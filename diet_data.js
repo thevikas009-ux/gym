@@ -1,5 +1,5 @@
 // ============================================================
-// YUVA — Diet Data & Food Database (Complete Updated)
+// YUVA — Diet Data & Food Database
 // ============================================================
 
 const DAILY_TARGET = {
@@ -16,11 +16,11 @@ const FOOD_DB = [
   { id: "apple_1med", group: "Fruits", name: "Apple / Seb (1 Medium)", cal: 95, protein: 0.5, carbs: 25, fiber: 4.4, unit: "apple" },
 
   // --- MUNCHIES & HEALTHY SNACKS ---
-  { id: "roasted_peanuts_30g", group: "Munchies & Snacks", name: "Roasted Peanuts / Mungfali (Handful 30g)", cal: 170, protein: 7.5, carbs: 6, fiber: 2.5, unit: "30g" },
-  { id: "roasted_chana_30g", group: "Munchies & Snacks", name: "Roasted Chana / Bhuna Chana (Handful 30g)", cal: 110, protein: 6, carbs: 18, fiber: 5, unit: "30g" },
-  { id: "makhana_1cup", group: "Munchies & Snacks", name: "Roasted Makhana / Foxnuts (1 Cup ~20g)", cal: 70, protein: 2, carbs: 14, fiber: 2, unit: "cup" },
+  { id: "roasted_peanuts_30g", group: "Munchies & Snacks", name: "Roasted Peanuts / Mungfali (30g)", cal: 170, protein: 7.5, carbs: 6, fiber: 2.5, unit: "30g" },
+  { id: "roasted_chana_30g", group: "Munchies & Snacks", name: "Roasted Chana / Bhuna Chana (30g)", cal: 110, protein: 6, carbs: 18, fiber: 5, unit: "30g" },
+  { id: "makhana_1cup", group: "Munchies & Snacks", name: "Roasted Makhana / Foxnuts (1 Cup)", cal: 70, protein: 2, carbs: 14, fiber: 2, unit: "cup" },
   { id: "khakhra_1pc", group: "Munchies & Snacks", name: "Whole Wheat Khakhra (1 Piece)", cal: 75, protein: 2, carbs: 13, fiber: 2, unit: "piece" },
-  { id: "chiwda_1cup", group: "Munchies & Snacks", name: "Poha Chiwda / Namkeen (1 Cup ~30g)", cal: 130, protein: 2.5, carbs: 20, fiber: 1.5, unit: "cup" },
+  { id: "chiwda_1cup", group: "Munchies & Snacks", name: "Poha Chiwda / Namkeen (1 Cup)", cal: 130, protein: 2.5, carbs: 20, fiber: 1.5, unit: "cup" },
   { id: "oats_biscuit_2pc", group: "Munchies & Snacks", name: "Oats Biscuits (2 Pieces)", cal: 90, protein: 2, carbs: 14, fiber: 1.5, unit: "2 pcs" },
   { id: "murmura_1cup", group: "Munchies & Snacks", name: "Kurmura / Murmura / Puffed Rice (1 Cup)", cal: 50, protein: 1, carbs: 11, fiber: 0.5, unit: "cup" },
 
@@ -48,7 +48,7 @@ const FOOD_DB = [
   { id: "paneer_100g", group: "Breakfast & Meal Items", name: "Raw Paneer (100g)", cal: 265, protein: 18, carbs: 3, fiber: 0, unit: "100g" },
   { id: "almonds_10", group: "Breakfast & Meal Items", name: "Almonds (10 pcs)", cal: 70, protein: 2.5, carbs: 2.5, fiber: 1.5, unit: "handful" },
 
-  // --- MAIN MEALS (LUNCH / DINNER) ---
+  // --- MAIN MEALS ---
   { id: "khichdi_1bowl", group: "Main Meals", name: "Dal Khichdi (1 Bowl ~200g)", cal: 215, protein: 7.5, carbs: 38, fiber: 4.5, unit: "bowl" },
   { id: "masala_rice_1bowl", group: "Main Meals", name: "Masala Rice / Pulao (1 Bowl)", cal: 210, protein: 4.5, carbs: 42, fiber: 2.5, unit: "bowl" },
   { id: "roti_1", group: "Main Meals", name: "Wheat Roti / Chapati (1 pc)", cal: 85, protein: 3, carbs: 15, fiber: 2, unit: "roti" },
