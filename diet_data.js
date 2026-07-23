@@ -10,6 +10,10 @@ const DAILY_TARGET = {
 };
 
 const FOOD_DB = [
+  // --- Fruits ---
+  { id: "banana_med", name: "Banana / Kela (Medium ~100g)", cal: 89, protein: 1.1, carbs: 23, fiber: 2.6, unit: "banana" },
+  { id: "banana_small", name: "Banana / Kela (Small ~70g)", cal: 62, protein: 0.8, carbs: 16, fiber: 1.8, unit: "banana" },
+
   // --- Beverages & Tea/Coffee ---
   { id: "coffee_1cup", name: "1 Cup Coffee (Milk & Sugar)", cal: 80, protein: 2, carbs: 10, fiber: 0, unit: "cup" },
   { id: "tea_lowsugar", name: "1 Cup Milk Tea (Low Sugar)", cal: 60, protein: 2, carbs: 7, fiber: 0, unit: "cup" },
@@ -51,8 +55,8 @@ const DIET_DATA = [
     title: "Morning Kickstart",
     macroNote: "Target: Quick Carbs & Hydration",
     options: [
-      { tag: "veg", text: "1 Cup Coffee/Tea + 2 Brown Bread slices / 1 Fruit" },
-      { tag: "nonveg", text: "Black Coffee + 2 Boiled Egg Whites" }
+      { tag: "veg", text: "1 Banana + 1 Cup Coffee/Tea OR 2 Brown Bread Slices" },
+      { tag: "nonveg", text: "Black Coffee + 2 Boiled Egg Whites / 1 Banana" }
     ]
   },
   {
@@ -61,8 +65,8 @@ const DIET_DATA = [
     title: "Post-Workout Breakfast",
     macroNote: "Target: 30g+ Protein + Fiber",
     options: [
-      { tag: "veg", text: "1 Plate Poha / Upma + 1 Scoop Whey in Milk OR Paneer Sandwich" },
-      { tag: "nonveg", text: "3 Whole Eggs / Omlette + 2 Brown Bread Slices + Tea/Coffee" }
+      { tag: "veg", text: "1 Plate Poha / Upma + 1 Scoop Whey + 1 Banana" },
+      { tag: "nonveg", text: "3 Whole Eggs + 2 Brown Bread Slices + 1 Banana" }
     ]
   },
   {
@@ -71,8 +75,8 @@ const DIET_DATA = [
     title: "High-Protein Lunch",
     macroNote: "Target: 40g Protein + Clean Carbs",
     options: [
-      { tag: "veg", text: "2 Roti + 1 Bowl Dal + 50g Soya Chunks Sabzi + 1 Bowl Curd + Salad" },
-      { tag: "nonveg", text: "2 Roti / Rice + 150g Chicken Curry + 1 Bowl Dal + Salad" }
+      { tag: "veg", text: "2 Roti + 1 Bowl Dal + 50g Soya Chunks Sabzi + Curd + Salad" },
+      { tag: "nonveg", text: "2 Roti / Rice + 150g Chicken Curry + Dal + Salad" }
     ]
   },
   {
@@ -81,8 +85,8 @@ const DIET_DATA = [
     title: "Workday Refuel",
     macroNote: "Target: Satiety & Sustained Energy",
     options: [
-      { tag: "veg", text: "1 Cup Milk Tea (Low Sugar / Jaggery) + 1 Bowl Sprouts / Roasted Chana" },
-      { tag: "veg", text: "1 Scoop Whey + 10 Almonds" }
+      { tag: "veg", text: "1 Cup Milk Tea (Low Sugar / Jaggery) + 1 Banana / Sprouts" },
+      { tag: "veg", text: "1 Scoop Whey + 1 Banana + 10 Almonds" }
     ]
   },
   {
