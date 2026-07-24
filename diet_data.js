@@ -1,5 +1,5 @@
 // ============================================================
-// YUVA — Diet Data & Food Database
+// YUVA — Diet Data & Food Database (Expanded Full Menu)
 // ============================================================
 
 const DAILY_TARGET = {
@@ -21,8 +21,42 @@ const FOOD_DB = [
   { id: "makhana_1cup", group: "Munchies & Snacks", name: "Roasted Makhana / Foxnuts (1 Cup)", cal: 70, protein: 2, carbs: 14, fiber: 2, unit: "cup" },
   { id: "khakhra_1pc", group: "Munchies & Snacks", name: "Whole Wheat Khakhra (1 Piece)", cal: 75, protein: 2, carbs: 13, fiber: 2, unit: "piece" },
   { id: "chiwda_1cup", group: "Munchies & Snacks", name: "Poha Chiwda / Namkeen (1 Cup)", cal: 130, protein: 2.5, carbs: 20, fiber: 1.5, unit: "cup" },
+  { id: "diet_chiwda_1cup", group: "Munchies & Snacks", name: "Diet Roasted Chiwda / Poha (1 Cup)", cal: 100, protein: 2, carbs: 18, fiber: 2, unit: "cup" },
+  { id: "lasun_chivda_1cup", group: "Munchies & Snacks", name: "Lasun Chivda (1 Cup ~30g)", cal: 150, protein: 2, carbs: 18, fiber: 1.5, unit: "cup" },
   { id: "oats_biscuit_2pc", group: "Munchies & Snacks", name: "Oats Biscuits (2 Pieces)", cal: 90, protein: 2, carbs: 14, fiber: 1.5, unit: "2 pcs" },
   { id: "murmura_1cup", group: "Munchies & Snacks", name: "Kurmura / Murmura / Puffed Rice (1 Cup)", cal: 50, protein: 1, carbs: 11, fiber: 0.5, unit: "cup" },
+  { id: "bhel_1plate", group: "Munchies & Snacks", name: "Bhel Puri (1 Plate ~150g)", cal: 220, protein: 4, carbs: 38, fiber: 3, unit: "plate" },
+  { id: "kurkure_1pkt", group: "Munchies & Snacks", name: "Kurkure / Namkeen Pack (Small 30g)", cal: 160, protein: 1.8, carbs: 17, fiber: 0.5, unit: "pkt" },
+  { id: "potato_wafer_1pkt", group: "Munchies & Snacks", name: "Potato Wafers / Chips (Small 30g)", cal: 165, protein: 2, carbs: 16, fiber: 1, unit: "pkt" },
+  { id: "puffed_corn_chips", group: "Munchies & Snacks", name: "Puffed Corn Chips / Cheetos (30g)", cal: 145, protein: 1.5, carbs: 19, fiber: 1, unit: "pkt" },
+
+  // --- STREET FOOD & FAST FOOD ---
+  { id: "vada_pav_1pc", group: "Street Food & Fast Food", name: "Vada Pav (1 Piece)", cal: 290, protein: 5, carbs: 42, fiber: 3, unit: "pc" },
+  { id: "samosa_pav_1pc", group: "Street Food & Fast Food", name: "Samosa Pav (1 Piece)", cal: 320, protein: 6, carbs: 48, fiber: 3.5, unit: "pc" },
+  { id: "pav_bhaji_1plate", group: "Street Food & Fast Food", name: "Pav Bhaji (2 Butter Pav + Bhaji)", cal: 420, protein: 8, carbs: 62, fiber: 6, unit: "plate" },
+  { id: "veg_burger_1pc", group: "Street Food & Fast Food", name: "Veg Burger (1 Medium)", cal: 350, protein: 9, carbs: 48, fiber: 4, unit: "burger" },
+  { id: "veg_pizza_1slice", group: "Street Food & Fast Food", name: "Veg Cheese Pizza (1 Medium Slice)", cal: 240, protein: 9, carbs: 28, fiber: 2, unit: "slice" },
+  { id: "veg_momos_6pc", group: "Street Food & Fast Food", name: "Steamed Veg Momos (6 pcs)", cal: 210, protein: 5, carbs: 36, fiber: 2, unit: "plate" },
+  { id: "chicken_momos_6pc", group: "Street Food & Fast Food", name: "Steamed Chicken Momos (6 pcs)", cal: 280, protein: 16, carbs: 32, fiber: 1.5, unit: "plate" },
+
+  // --- NOODLES, PASTA & RAMEN ---
+  { id: "maggie_1pkt", group: "Noodles & Pasta", name: "Maggie Noodles (1 Pack Cooked)", cal: 310, protein: 7, carbs: 46, fiber: 2, unit: "pack" },
+  { id: "ramen_1bowl", group: "Noodles & Pasta", name: "Korean / Veg Ramen Bowl", cal: 380, protein: 8, carbs: 54, fiber: 3, unit: "bowl" },
+  { id: "veg_pasta_1bowl", group: "Noodles & Pasta", name: "Veg Pasta (White/Red Sauce - 1 Bowl)", cal: 280, protein: 7, carbs: 42, fiber: 3, unit: "bowl" },
+  { id: "chicken_pasta_1bowl", group: "Noodles & Pasta", name: "Chicken Pasta (1 Bowl)", cal: 360, protein: 22, carbs: 40, fiber: 2.5, unit: "bowl" },
+  { id: "veg_noodles_1bowl", group: "Noodles & Pasta", name: "Veg Hakka Noodles (1 Bowl)", cal: 290, protein: 6, carbs: 45, fiber: 3, unit: "bowl" },
+  { id: "chicken_noodles_1bowl", group: "Noodles & Pasta", name: "Chicken Hakka Noodles (1 Bowl)", cal: 370, protein: 18, carbs: 44, fiber: 2.5, unit: "bowl" },
+
+  // --- SOUTH INDIAN ITEMS ---
+  { id: "idli_2pc", group: "South Indian", name: "Steamed Idli (2 pcs + Sambhar)", cal: 150, protein: 5, carbs: 30, fiber: 3, unit: "2 pcs" },
+  { id: "medu_vada_2pc", group: "South Indian", name: "Medu Vada (2 pcs + Sambhar)", cal: 310, protein: 7, carbs: 34, fiber: 4, unit: "2 pcs" },
+  { id: "masala_dosa_1pc", group: "South Indian", name: "Masala Dosa (1 Medium + Sambhar)", cal: 330, protein: 6, carbs: 52, fiber: 4, unit: "dosa" },
+  { id: "dahi_vada_2pc", group: "South Indian", name: "Dahi Vada (2 pcs)", cal: 260, protein: 8, carbs: 32, fiber: 2.5, unit: "plate" },
+
+  // --- SWEETS & DESSERTS ---
+  { id: "dark_chocolate_30g", group: "Sweets & Desserts", name: "Dark Chocolate 70%+ (30g / 3 squares)", cal: 170, protein: 2.2, carbs: 13, fiber: 3.2, unit: "30g" },
+  { id: "indian_sweet_1pc", group: "Sweets & Desserts", name: "Indian Sweet / Mithai (Gulab Jamun/Laddoo 1 pc)", cal: 150, protein: 2, carbs: 22, fiber: 0.5, unit: "pc" },
+  { id: "halwa_1bowl", group: "Sweets & Desserts", name: "Sooji / Gajar Halwa (1 Small Bowl ~100g)", cal: 240, protein: 3.5, carbs: 36, fiber: 1.5, unit: "bowl" },
 
   // --- SOUPS & STARTERS ---
   { id: "veg_soup_1bowl", group: "Soups & Starters", name: "Mixed Veg Soup (1 Bowl ~250ml)", cal: 65, protein: 2, carbs: 10, fiber: 3, unit: "bowl" },
@@ -36,7 +70,9 @@ const FOOD_DB = [
   { id: "whey_1scoop", group: "Beverages & Tea/Coffee", name: "Whey Protein (1 Scoop)", cal: 120, protein: 24, carbs: 2, fiber: 0, unit: "scoop" },
   { id: "milk_250ml", group: "Beverages & Tea/Coffee", name: "Toned Milk (250ml)", cal: 150, protein: 8, carbs: 12, fiber: 0, unit: "glass" },
 
-  // --- BREAKFAST & SNACKS ---
+  // --- BREAKFAST & MEAL ITEMS ---
+  { id: "boil_potato_1med", group: "Breakfast & Meal Items", name: "Boiled Potato / Aloo (1 Medium ~100g)", cal: 87, protein: 2, carbs: 20, fiber: 1.8, unit: "potato" },
+  { id: "soya_chaap_100g", group: "Breakfast & Meal Items", name: "Soya Chaap Cooked (100g)", cal: 210, protein: 16, carbs: 14, fiber: 3, unit: "100g" },
   { id: "boiled_corn_1cup", group: "Breakfast & Meal Items", name: "Boiled Sweet Corn (1 Cup / 150g)", cal: 140, protein: 5, carbs: 28, fiber: 4, unit: "cup" },
   { id: "poha_1plate", group: "Breakfast & Meal Items", name: "Poha (1 Medium Plate)", cal: 220, protein: 4, carbs: 40, fiber: 3, unit: "plate" },
   { id: "upma_1plate", group: "Breakfast & Meal Items", name: "Upma (1 Medium Plate)", cal: 210, protein: 5, carbs: 36, fiber: 3, unit: "plate" },
@@ -82,7 +118,7 @@ const DIET_DATA = [
     title: "Post-Workout Breakfast",
     macroNote: "Target: 30g+ Protein + Fiber",
     options: [
-      { tag: "veg", text: "1 Bowl Boiled Corn / Poha / Upma + 1 Scoop Whey" },
+      { tag: "veg", text: "1 Bowl Boiled Corn / Poha / Upma / Idli + 1 Scoop Whey" },
       { tag: "nonveg", text: "3 Whole Eggs + 2 Brown Bread Slices + 1 Banana" }
     ]
   },
@@ -92,7 +128,7 @@ const DIET_DATA = [
     title: "High-Protein Lunch",
     macroNote: "Target: 40g Protein + Clean Carbs",
     options: [
-      { tag: "veg", text: "1 Bowl Dal Khichdi / Masala Rice / 2 Roti + Dal + Soya Chunks + Curd" },
+      { tag: "veg", text: "1 Bowl Dal Khichdi / Masala Rice / 2 Roti + Dal + Soya Chunks/Chaap + Curd" },
       { tag: "nonveg", text: "1 Bowl Masala Rice / 2 Roti + 150g Chicken Curry + Salad" }
     ]
   },
@@ -102,7 +138,7 @@ const DIET_DATA = [
     title: "Workday Refuel",
     macroNote: "Target: Satiety & Sustained Energy",
     options: [
-      { tag: "veg", text: "1 Cup Makhana / Roasted Chana / Chiwda + Tea" },
+      { tag: "veg", text: "1 Cup Makhana / Roasted Chana / Diet Chiwda / Bhel + Tea" },
       { tag: "veg", text: "1 Scoop Whey + 1 Banana + 10 Almonds / Peanuts" }
     ]
   },
@@ -112,7 +148,7 @@ const DIET_DATA = [
     title: "Light & Clean Dinner",
     macroNote: "Target: Protein Rich, Moderate Carbs",
     options: [
-      { tag: "veg", text: "1 Bowl Dal Khichdi / Mixed Veg Soup + Roti + Paneer" },
+      { tag: "veg", text: "1 Bowl Dal Khichdi / Mixed Veg Soup + Roti + Paneer / Soya Chaap" },
       { tag: "nonveg", text: "1 Bowl Chicken Soup / Grilled Chicken + 1 Roti + Salad" }
     ]
   }
