@@ -385,15 +385,128 @@ const SPLIT_FOCUS = {
   rest: "Rest & Active Recovery"
 };
 
+// FULL 4-WEEK COMPLETE WORKOUT ROUTINE
 const WORKOUT_DATA = {
   1: {
-    legs: [{ name: "Squats", sets: 4, reps: "8-10", rest: "90s", img: "https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=150" }],
-    push: [{ name: "Bench Press", sets: 4, reps: "8-10", rest: "90s", img: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=150" }],
-    pull: [{ name: "Lat Pulldown", sets: 4, reps: "10-12", rest: "60s", img: "https://images.unsplash.com/photo-1605296867304-46d5465a13f1?w=150" }]
+    legs: [
+      { name: "Barbell Squats", sets: 4, reps: "8-10", rest: "90s", img: "https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=150" },
+      { name: "Romanian Deadlifts", sets: 3, reps: "10-12", rest: "90s", img: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=150" },
+      { name: "Leg Press", sets: 3, reps: "12-15", rest: "60s", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=150" },
+      { name: "Walking Lunges", sets: 3, reps: "12 per leg", rest: "60s", img: "https://images.unsplash.com/photo-1434596922112-19c563067271?w=150" },
+      { name: "Standing Calf Raises", sets: 4, reps: "15-20", rest: "45s", img: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=150" }
+    ],
+    push: [
+      { name: "Barbell Bench Press", sets: 4, reps: "8-10", rest: "90s", img: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=150" },
+      { name: "Incline Dumbbell Press", sets: 3, reps: "10-12", rest: "60s", img: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=150" },
+      { name: "Overhead Dumbbell Press", sets: 3, reps: "10-12", rest: "60s", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=150" },
+      { name: "Cable Chest Flyes", sets: 3, reps: "12-15", rest: "60s", img: "https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=150" },
+      { name: "Triceps Rope Pushdown", sets: 3, reps: "12-15", rest: "45s", img: "https://images.unsplash.com/photo-1605296867304-46d5465a13f1?w=150" }
+    ],
+    pull: [
+      { name: "Barbell Bent-Over Rows", sets: 4, reps: "8-10", rest: "90s", img: "https://images.unsplash.com/photo-1605296867304-46d5465a13f1?w=150" },
+      { name: "Lat Pulldowns", sets: 3, reps: "10-12", rest: "60s", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=150" },
+      { name: "Seated Cable Rows", sets: 3, reps: "10-12", rest: "60s", img: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=150" },
+      { name: "Face Pulls", sets: 3, reps: "15", rest: "45s", img: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=150" },
+      { name: "Dumbbell Bicep Curls", sets: 3, reps: "12-15", rest: "45s", img: "https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=150" }
+    ],
+    full: [
+      { name: "Goblet Squats", sets: 3, reps: "12", rest: "60s", img: "https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=150" },
+      { name: "Dumbbell Shoulder Press", sets: 3, reps: "12", rest: "60s", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=150" },
+      { name: "Lat Pulldowns", sets: 3, reps: "12", rest: "60s", img: "https://images.unsplash.com/photo-1605296867304-46d5465a13f1?w=150" },
+      { name: "Push-ups", sets: 3, reps: "15", rest: "45s", img: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=150" },
+      { name: "Plank Hold", sets: 3, reps: "45 sec", rest: "30s", img: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=150" }
+    ]
   },
-  2: { legs: [], push: [], pull: [] },
-  3: { legs: [], push: [], pull: [] },
-  4: { legs: [], push: [], pull: [] }
+  2: {
+    legs: [
+      { name: "Bulgarian Split Squats", sets: 3, reps: "10 per leg", rest: "60s", img: "https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=150" },
+      { name: "Romanian Deadlifts", sets: 4, reps: "8-10", rest: "90s", img: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=150" },
+      { name: "Dumbbell Step-ups", sets: 3, reps: "12 per leg", rest: "60s", img: "https://images.unsplash.com/photo-1434596922112-19c563067271?w=150" },
+      { name: "Hamstring Lying Curls", sets: 3, reps: "12-15", rest: "60s", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=150" },
+      { name: "Seated Calf Raises", sets: 4, reps: "15", rest: "45s", img: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=150" }
+    ],
+    push: [
+      { name: "Incline Barbell Press", sets: 4, reps: "8-10", rest: "90s", img: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=150" },
+      { name: "Flat Dumbbell Press", sets: 3, reps: "10-12", rest: "60s", img: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=150" },
+      { name: "Lateral Dumbbell Raises", sets: 4, reps: "12-15", rest: "45s", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=150" },
+      { name: "Bodyweight Dips", sets: 3, reps: "8-12", rest: "60s", img: "https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=150" },
+      { name: "Triceps Skullcrushers", sets: 3, reps: "12", rest: "45s", img: "https://images.unsplash.com/photo-1605296867304-46d5465a13f1?w=150" }
+    ],
+    pull: [
+      { name: "Pull-ups / Assisted Pull-ups", sets: 4, reps: "6-10", rest: "90s", img: "https://images.unsplash.com/photo-1605296867304-46d5465a13f1?w=150" },
+      { name: "Single-Arm Dumbbell Rows", sets: 3, reps: "10 per arm", rest: "60s", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=150" },
+      { name: "T-Bar Rows", sets: 3, reps: "10-12", rest: "60s", img: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=150" },
+      { name: "Hammer Curls", sets: 3, reps: "12", rest: "45s", img: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=150" },
+      { name: "Reverse Cable Flyes", sets: 3, reps: "15", rest: "45s", img: "https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=150" }
+    ],
+    full: [
+      { name: "Romanian Deadlifts", sets: 3, reps: "10", rest: "60s", img: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=150" },
+      { name: "Dumbbell Bench Press", sets: 3, reps: "12", rest: "60s", img: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=150" },
+      { name: "Seated Cable Rows", sets: 3, reps: "12", rest: "60s", img: "https://images.unsplash.com/photo-1605296867304-46d5465a13f1?w=150" },
+      { name: "Dumbbell Shoulder Press", sets: 3, reps: "12", rest: "60s", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=150" },
+      { name: "Hanging Leg Raises", sets: 3, reps: "12", rest: "45s", img: "https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=150" }
+    ]
+  },
+  3: {
+    legs: [
+      { name: "Front Squats", sets: 4, reps: "8-10", rest: "90s", img: "https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=150" },
+      { name: "Hack Squats / Leg Press", sets: 3, reps: "10-12", rest: "60s", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=150" },
+      { name: "Leg Extensions", sets: 3, reps: "12-15", rest: "45s", img: "https://images.unsplash.com/photo-1434596922112-19c563067271?w=150" },
+      { name: "Lying Leg Curls", sets: 3, reps: "12-15", rest: "45s", img: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=150" },
+      { name: "Standing Calf Raises", sets: 4, reps: "15-20", rest: "45s", img: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=150" }
+    ],
+    push: [
+      { name: "Flat Dumbbell Press", sets: 4, reps: "8-10", rest: "90s", img: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=150" },
+      { name: "Overhead Barbell Military Press", sets: 3, reps: "8-10", rest: "90s", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=150" },
+      { name: "Incline Cable Flyes", sets: 3, reps: "12-15", rest: "60s", img: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=150" },
+      { name: "Arnold Press", sets: 3, reps: "10-12", rest: "60s", img: "https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=150" },
+      { name: "Overhead Dumbbell Triceps Ext", sets: 3, reps: "12", rest: "45s", img: "https://images.unsplash.com/photo-1605296867304-46d5465a13f1?w=150" }
+    ],
+    pull: [
+      { name: "Wide Grip Lat Pulldown", sets: 4, reps: "10-12", rest: "60s", img: "https://images.unsplash.com/photo-1605296867304-46d5465a13f1?w=150" },
+      { name: "Barbell Shrugs", sets: 3, reps: "12-15", rest: "45s", img: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=150" },
+      { name: "Cable Face Pulls", sets: 3, reps: "15", rest: "45s", img: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=150" },
+      { name: "Incline Dumbbell Bicep Curls", sets: 3, reps: "12", rest: "45s", img: "https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=150" },
+      { name: "Preacher EZ Bar Curls", sets: 3, reps: "10-12", rest: "45s", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=150" }
+    ],
+    full: [
+      { name: "Barbell Squats", sets: 3, reps: "10", rest: "60s", img: "https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=150" },
+      { name: "Incline Dumbbell Press", sets: 3, reps: "12", rest: "60s", img: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=150" },
+      { name: "Bent Over Rows", sets: 3, reps: "12", rest: "60s", img: "https://images.unsplash.com/photo-1605296867304-46d5465a13f1?w=150" },
+      { name: "Lateral Raises", sets: 3, reps: "15", rest: "45s", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=150" },
+      { name: "Ab Wheel Rollouts", sets: 3, reps: "12", rest: "45s", img: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=150" }
+    ]
+  },
+  4: {
+    legs: [
+      { name: "Heavy Barbell Squats", sets: 4, reps: "6-8", rest: "120s", img: "https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=150" },
+      { name: "Leg Press (Drop Set)", sets: 3, reps: "10-12", rest: "60s", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=150" },
+      { name: "Romanian Deadlifts", sets: 4, reps: "8-10", rest: "90s", img: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=150" },
+      { name: "Walking Lunges", sets: 3, reps: "12 per leg", rest: "60s", img: "https://images.unsplash.com/photo-1434596922112-19c563067271?w=150" },
+      { name: "Seated Calf Raises", sets: 4, reps: "15", rest: "45s", img: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=150" }
+    ],
+    push: [
+      { name: "Barbell Bench Press", sets: 4, reps: "6-8", rest: "120s", img: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=150" },
+      { name: "Incline Dumbbell Flyes", sets: 3, reps: "12", rest: "60s", img: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=150" },
+      { name: "Dumbbell Lateral Raises", sets: 4, reps: "15", rest: "45s", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=150" },
+      { name: "Cable Triceps Pushdown", sets: 3, reps: "15", rest: "45s", img: "https://images.unsplash.com/photo-1605296867304-46d5465a13f1?w=150" },
+      { name: "Push-ups to Failure", sets: 3, reps: "Max", rest: "60s", img: "https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=150" }
+    ],
+    pull: [
+      { name: "Barbell Rows", sets: 4, reps: "8-10", rest: "90s", img: "https://images.unsplash.com/photo-1605296867304-46d5465a13f1?w=150" },
+      { name: "Neutral Grip Lat Pulldown", sets: 3, reps: "10-12", rest: "60s", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=150" },
+      { name: "Single Arm Cable Row", sets: 3, reps: "12", rest: "45s", img: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=150" },
+      { name: "Standing Barbell Curls", sets: 3, reps: "10-12", rest: "45s", img: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=150" },
+      { name: "Hammer Curls", sets: 3, reps: "12", rest: "45s", img: "https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=150" }
+    ],
+    full: [
+      { name: "Goblet Squats", sets: 3, reps: "12", rest: "60s", img: "https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=150" },
+      { name: "Push-ups", sets: 3, reps: "15", rest: "45s", img: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=150" },
+      { name: "Lat Pulldowns", sets: 3, reps: "12", rest: "60s", img: "https://images.unsplash.com/photo-1605296867304-46d5465a13f1?w=150" },
+      { name: "Dumbbell Shoulder Press", sets: 3, reps: "12", rest: "60s", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=150" },
+      { name: "Plank Hold", sets: 3, reps: "60 sec", rest: "30s", img: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=150" }
+    ]
+  }
 };
 
 // --- DIET & FOOD DATABASE ---
