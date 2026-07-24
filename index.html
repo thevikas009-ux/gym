@@ -403,6 +403,11 @@ const FOOD_DB = [
   // --- FRUITS ---
   { id: "banana_med", group: "Fruits", name: "Banana / Kela (Medium ~100g)", cal: 89, protein: 1.1, carbs: 23, fiber: 2.6 },
   { id: "banana_small", group: "Fruits", name: "Banana / Kela (Small ~70g)", cal: 62, protein: 0.8, carbs: 16, fiber: 1.8 },
+  { id: "mango_1med", group: "Fruits", name: "Mango / Aam (1 Medium ~200g)", cal: 120, protein: 1.4, carbs: 28, fiber: 3 },
+  { id: "pineapple_1bowl", group: "Fruits", name: "Pineapple / Ananas (1 Bowl ~150g)", cal: 82, protein: 0.9, carbs: 21, fiber: 2.3 },
+  { id: "orange_1med", group: "Fruits", name: "Orange / Santra (1 Medium)", cal: 62, protein: 1.2, carbs: 15, fiber: 3.1 },
+  { id: "mosambi_1med", group: "Fruits", name: "Mosambi / Sweet Lime (1 Medium)", cal: 53, protein: 0.8, carbs: 14, fiber: 2.8 },
+  { id: "coconut_water_250ml", group: "Fruits", name: "Nariyal Pani / Coconut Water (250ml)", cal: 45, protein: 1.7, carbs: 9, fiber: 2.6 },
   { id: "apple_1med", group: "Fruits", name: "Apple / Seb (1 Medium)", cal: 95, protein: 0.5, carbs: 25, fiber: 4.4 },
 
   // --- MUNCHIES & HEALTHY SNACKS ---
@@ -420,13 +425,9 @@ const FOOD_DB = [
   { id: "potato_wafer_1pkt", group: "Munchies & Snacks", name: "Potato Wafers / Chips (30g)", cal: 165, protein: 2, carbs: 16, fiber: 1 },
   { id: "puffed_corn_chips", group: "Munchies & Snacks", name: "Puffed Corn Chips / Cheetos (30g)", cal: 145, protein: 1.5, carbs: 19, fiber: 1 },
 
-// --- EGG SPECIALS ---
-  { id: "egg_omlette_1", group: "Breakfast & Meal Items", name: "Plain / Masala Omelette (2 Eggs)", cal: 180, protein: 12, carbs: 3, fiber: 0.5 },
+  // --- STREET FOOD & FAST FOOD ---
   { id: "omelette_pav_1", group: "Street Food & Fast Food", name: "Omelette Pav (2 Eggs + 2 Pav)", cal: 340, protein: 16, carbs: 35, fiber: 2 },
   { id: "boiled_egg_pav_1", group: "Street Food & Fast Food", name: "Boiled Egg Pav (2 Eggs + 2 Pav)", cal: 310, protein: 16, carbs: 34, fiber: 2 },
-
-  
-  // --- STREET FOOD & FAST FOOD ---
   { id: "vada_pav_1pc", group: "Street Food & Fast Food", name: "Vada Pav (1 Piece)", cal: 290, protein: 5, carbs: 42, fiber: 3 },
   { id: "samosa_pav_1pc", group: "Street Food & Fast Food", name: "Samosa Pav (1 Piece)", cal: 320, protein: 6, carbs: 48, fiber: 3.5 },
   { id: "pav_bhaji_1plate", group: "Street Food & Fast Food", name: "Pav Bhaji (2 Butter Pav + Bhaji)", cal: 420, protein: 8, carbs: 62, fiber: 6 },
@@ -467,6 +468,7 @@ const FOOD_DB = [
   { id: "milk_250ml", group: "Beverages & Tea/Coffee", name: "Toned Milk (250ml)", cal: 150, protein: 8, carbs: 12, fiber: 0 },
 
   // --- BREAKFAST & MEAL ITEMS ---
+  { id: "egg_omlette_1", group: "Breakfast & Meal Items", name: "Plain / Masala Omelette (2 Eggs)", cal: 180, protein: 12, carbs: 3, fiber: 0.5 },
   { id: "boil_potato_1med", group: "Breakfast & Meal Items", name: "Boiled Potato / Aloo (1 Medium ~100g)", cal: 87, protein: 2, carbs: 20, fiber: 1.8 },
   { id: "soya_chaap_100g", group: "Breakfast & Meal Items", name: "Soya Chaap Cooked (100g)", cal: 210, protein: 16, carbs: 14, fiber: 3 },
   { id: "boiled_corn_1cup", group: "Breakfast & Meal Items", name: "Boiled Sweet Corn (1 Cup / 150g)", cal: 140, protein: 5, carbs: 28, fiber: 4 },
@@ -503,7 +505,7 @@ const DIET_DATA = [
     title: "Morning Kickstart",
     macroNote: "Target: Quick Carbs & Hydration",
     options: [
-      { tag: "veg", text: "1 Banana + Coffee/Tea OR Brown Bread" },
+      { tag: "veg", text: "1 Mango / Banana / Coconut Water + Coffee/Tea" },
       { tag: "nonveg", text: "Black Coffee + 2 Boiled Egg Whites" }
     ]
   },
@@ -514,7 +516,7 @@ const DIET_DATA = [
     macroNote: "Target: 30g+ Protein + Fiber",
     options: [
       { tag: "veg", text: "Boiled Corn / Poha / Upma / Idli + Whey" },
-      { tag: "nonveg", text: "3 Eggs + Brown Bread + Banana" }
+      { tag: "nonveg", text: "Masala Omelette / Omelette Pav / Boiled Egg Pav" }
     ]
   },
   {
@@ -533,8 +535,8 @@ const DIET_DATA = [
     title: "Workday Refuel",
     macroNote: "Target: Satiety & Sustained Energy",
     options: [
-      { tag: "veg", text: "Makhana / Roasted Chana / Chiwda / Bhel + Tea" },
-      { tag: "veg", text: "1 Scoop Whey + Banana + Peanuts" }
+      { tag: "veg", text: "Pineapple / Orange / Mosambi / Makhana / Chiwda + Tea" },
+      { tag: "veg", text: "1 Scoop Whey + Mango / Banana + Peanuts" }
     ]
   },
   {
